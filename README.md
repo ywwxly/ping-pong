@@ -39,3 +39,9 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
           下方中央。
     - 可切换3d或2d
     - electron 打包成exe文件夹 > Inno Setup 打包成exe安装文件
+
+### 2021.04.02
+
+1. 修复可连续开始的bug
+
+2. 优化UI

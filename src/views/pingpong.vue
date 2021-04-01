@@ -1,5 +1,14 @@
 <template>
   <div>
+    <h3 style="margin: 20px 0">
+      {{
+        testType == "2d"
+          ? showImageBg
+            ? "抽象模拟场景"
+            : "平滑运动"
+          : "三维运动"
+      }}视觉追踪训练
+    </h3>
     <div class="flex" style="justify-content: center">
       <div style="position: relative">
         <div
@@ -32,7 +41,11 @@
               ></el-button>
             </div>
           </el-tooltip>
-          <el-tooltip effect="dark" content="开始" placement="top-start">
+          <el-tooltip
+            effect="dark"
+            :content="isStart ? '关闭' : '开始'"
+            placement="top-start"
+          >
             <div class="item">
               <el-button
                 type="primary"
@@ -48,7 +61,7 @@
           :style="{
             height: wrapHeight + 'px',
             width: setW + 'px',
-            backgroundImage: showImageBg && bg2D && 'url(' + bg2D + ')',
+            backgroundImage: showImageBg ? bg2D && 'url(' + bg2D + ')' : null,
           }"
           :class="showImageBg && 'wrap-bg'"
           v-if="testType == '2d'"
@@ -292,7 +305,10 @@
             >{{ showImageBg ? "关闭" : "加载" }}抽象模拟场景</el-button
           >
         </el-form-item>
-        <el-form-item label="更换抽象模拟场景" v-if="testType == '2d'">
+        <el-form-item
+          label="更换抽象模拟场景"
+          v-if="testType == '2d' && showImageBg"
+        >
           <el-upload class="upload-demo" action="#" :on-change="uploadOnChange">
             <el-button size="small" type="primary">点击选择场景图片</el-button>
           </el-upload>
@@ -329,12 +345,7 @@
         >确 定</el-button
       >
     </el-dialog>
-    <el-dialog
-      title="帮助"
-      width="90%"
-      :visible.sync="helpDialogVisible"
-      :close-on-click-modal="false"
-    >
+    <el-dialog title="帮助" width="90%" :visible.sync="helpDialogVisible">
       <div style="text-align: left">
         <h3 style="text-align: left">（ 1 ）产品介绍</h3>
         <p>
@@ -388,6 +399,12 @@
           使用者可根据不同训练者的需要选用不同参数的视觉运动追踪训练。系统会自动记录训练者按键正确的次数和数字呈现的总次数，并显示在界面
           下方中央。
         </p>
+        <h3>（5）操作说明</h3>
+        <p>
+          点击开始后,随机出现数字,0 ：请按 下“ Z或方向左 ”键 ; “ 1 ”：请按下“
+          M或方向右
+          ”键。设置：球体运动速度，数字变化时间间隔，每组测试总数，测试窗口大小等可自行调节。
+        </p>
       </div>
 
       <el-button
@@ -433,7 +450,7 @@ export default {
       showText: "", //要展示的文本
       seletedTextShow: false, //选项是否显示
       timer: null,
-      setW: window.innerWidth * 0.9,
+      setW: window.innerWidth * 0.8,
       textTime: 500, //间隔时间
       ballSize: 40, //球的大小 px
       helpDialogVisible: false, //帮助信息
@@ -458,9 +475,15 @@ export default {
       uploadImg: [],
       bg2D: "", //模拟场景背景
       showImageBg: false,
+      isStart: false, //是否开始
     };
   },
-  mounted() {},
+  mounted() {
+    window.onresize = () => {
+      this.setW = document.body.clientWidth * 0.8;
+      console.log(this.setW);
+    };
+  },
   methods: {
     callFile() {
       //点击添加图片按钮，触发type:"file"的input标签
@@ -562,33 +585,39 @@ export default {
       this.createBalls();
     },
     init() {
-      this.tableData = [
-        {
-          testCount: 0,
-          allCount: 0,
-          correct: 0,
-          Mistake: 0,
-          nulls: 0,
-        },
-      ];
-      this.animationStop = false;
-      if (this.testType == "2d") {
-        this.init2D();
+      if (!this.isStart) {
+        this.tableData = [
+          {
+            testCount: 0,
+            allCount: 0,
+            correct: 0,
+            Mistake: 0,
+            nulls: 0,
+          },
+        ];
+        this.animationStop = false;
+        if (this.testType == "2d") {
+          this.init2D();
+        } else {
+          console.log(111);
+          this.create3DBall();
+        }
+        this.seletedTextShow = true;
+        for (var i = 0; i < this.balls.length; i++) {
+          //将所有的小球传到函数中,来实现对小球的移动
+          this.moveBall(this.balls[i]);
+        }
+        this.randomText();
+        this.addEventListener();
+        this.isStart = true;
       } else {
-        console.log(111);
-        this.create3DBall();
+        this.stopTest();
       }
-      this.seletedTextShow = true;
-      for (var i = 0; i < this.balls.length; i++) {
-        //将所有的小球传到函数中,来实现对小球的移动
-        this.moveBall(this.balls[i]);
-      }
-      this.randomText();
-      this.addEventListener();
     },
     stopTest() {
       console.log("停止");
-      if (this.testCount) {
+      if (this.isStart) {
+        this.isStart = false;
         document.removeEventListener("keydown", this.eventKey);
         clearTimeout(this.timer);
         cancelAnimationFrame(this.add);
