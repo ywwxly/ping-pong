@@ -45,3 +45,7 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 1. 修复可连续开始的bug
 
 2. 优化UI
+
+3. 修复3d调节窗口大小后，球体位置错乱的bug
+
+4. 优化3d界面，调节球体大小，间隔时间可实时更新。

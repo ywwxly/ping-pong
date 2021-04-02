@@ -478,6 +478,22 @@ export default {
       isStart: false, //是否开始
     };
   },
+  watch: {
+    wrapHeight(e, oldHieght) {
+      if (this.context3D) {
+        console.log(this.context3D, e, oldHieght);
+        this.$nextTick(() => {
+          this.context3D.translate(
+            this.wrapHeight / 2,
+            this.wrapHeight / 2 - 50
+          );
+        });
+      }
+    },
+    textTime(){
+      this.randomText();
+    }
+  },
   mounted() {
     window.onresize = () => {
       this.setW = document.body.clientWidth * 0.8;
@@ -539,7 +555,7 @@ export default {
       } else {
         this.testCount++;
         this.tableData[0].testCount = this.testCount.toString();
-        console.log(this.testCount);
+        // console.log(this.testCount);
         var r = randomNum(0, 1);
         if (this.testType == "2d") {
           this.wrapDiv.childNodes[0].innerText = this.textArr[r];
@@ -630,7 +646,19 @@ export default {
         this.seletedTextShow = false;
         this.rulsetShow = true;
         this.circles = [];
-        if (this.context3D) this.context3D.clearRect(-250, -250, 500, 500);
+        if (this.context3D) {
+          this.context3D.clearRect(
+            -this.wrapHeight / 2,
+            -(this.wrapHeight / 2 - 50),
+            this.wrapHeight,
+            this.wrapHeight
+          );
+          this.context3D.translate(
+            -this.wrapHeight / 2,
+            -(this.wrapHeight / 2 - 50)
+          );
+        }
+
         console.log(this.tableData, "this.tableData");
       }
     },
@@ -667,6 +695,7 @@ export default {
       // if (!this.context3D) {
       var canvas = document.getElementById("canvas");
       this.context3D = canvas.getContext("2d");
+      // window.context3D = this.context3D;
       this.context3D.shadowColor = "#000";
       //设置阴影水平偏移
       this.context3D.shadowOffsetX = 0;
@@ -684,7 +713,7 @@ export default {
           x: 0,
           y: 100,
           z: 50,
-          r: this.ballSize,
+          // r: this.ballSize,
           xspeed: 5,
           yspeed: 5,
           zspeed: 30,
@@ -694,7 +723,12 @@ export default {
       this.moveBall();
     },
     draw3dBall() {
-      this.context3D.clearRect(-250, -250, 500, 500);
+      this.context3D.clearRect(
+        -this.wrapHeight / 2,
+        -(this.wrapHeight / 2 - 50),
+        this.wrapHeight,
+        this.wrapHeight
+      );
       for (var i = 0; i < this.circles.length; i++) {
         var circle = this.circles[i];
         // circle.x += circle.xspeed;
@@ -719,13 +753,13 @@ export default {
           0,
           circle.x,
           circle.y,
-          circle.r
+          this.ballSize
         );
         radiusBg.addColorStop(0, "#fbf5dd");
         radiusBg.addColorStop(1, "#e4c03b");
         this.context3D.fillStyle = radiusBg;
 
-        this.context3D.arc(circle.x, circle.y, circle.r, 0, Math.PI * 2);
+        this.context3D.arc(circle.x, circle.y, this.ballSize, 0, Math.PI * 2);
         this.context3D.fill();
         // 设置颜色
         this.context3D.fillStyle = "#000";
