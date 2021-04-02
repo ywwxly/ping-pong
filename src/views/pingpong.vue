@@ -1,5 +1,6 @@
 <template>
   <div>
+    <div style="position: absolute; right: 50px">Version 1.3.0</div>
     <h3 style="margin: 20px 0">
       {{
         testType == "2d"
@@ -490,9 +491,9 @@ export default {
         });
       }
     },
-    textTime(){
+    textTime() {
       this.randomText();
-    }
+    },
   },
   mounted() {
     window.onresize = () => {
