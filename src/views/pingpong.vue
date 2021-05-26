@@ -1,6 +1,17 @@
 <template>
   <div>
     <div style="position: absolute; right: 50px">Version 1.5.0</div>
+    <download-excel
+      class="export-excel-wrapper"
+      :data="json_data"
+      :fields="json_fields"
+      :meta="json_meta"
+      name="远程诊断报告导出.xls"
+    >
+      <!-- 上面可以自定义自己的样式，还可以引用其他组件button -->
+
+      <el-button type="primary" size="small">导出EXCEL</el-button>
+    </download-excel>
     <h3 style="margin: 20px 0">
       {{
         testType == "2d"
@@ -502,6 +513,7 @@ function randomNum(m, n) {
 //     }, wait);
 //   }
 // }
+import timeFormat from "@/util/timeFormat";
 export default {
   name: "pingpong",
   data() {
@@ -557,6 +569,55 @@ export default {
         {
           name: "抽象模拟",
           value: "simulation",
+        },
+      ],
+      json_fields: {
+        "名称": "name", //常规字段
+
+        "头部-联系电话": "phone.mobile", //支持嵌套属性
+
+        "头部-损坏区域代码": {
+          field: "phone.landline",
+
+          //自定义回调函数
+
+          callback: (value) => {
+            return `损坏区域代码 - ${value}`;
+          },
+        },
+      },
+
+      json_data: [
+        {
+          name: "损坏的组件一",
+
+          city: "New York",
+
+          country: "United States",
+
+          birthdate: "1978-03-15",
+
+          phone: {
+            mobile: "1-541-754-3010",
+
+            landline: "(541) 754-3010",
+          },
+        },
+
+        {
+          name: "损坏的组件二",
+
+          city: "Athens",
+
+          country: "Greece",
+
+          birthdate: "1987-11-23",
+
+          phone: {
+            mobile: "+1 855 275 5071",
+
+            landline: "(2741) 2621-244",
+          },
         },
       ],
     };
@@ -755,6 +816,23 @@ export default {
         this.balls = [];
         this.tableData[0].allCount = this.testCount.toString();
         this.tableData[0].testCount = 0;
+        let tableData = localStorage.getItem(this.testType)
+          ? JSON.parse(localStorage.getItem(this.testType))
+          : [];
+        tableData.push(
+          Object.assign(
+            {
+              time: timeFormat(Date.now(), "yy/mm/dd hh:MM:ss"),
+            },
+            this.tableData[0]
+          )
+        );
+        localStorage.setItem(this.testType, JSON.stringify(tableData));
+        console.log(
+          this.tableData,
+          timeFormat(Date.now(), "yy/mm/dd hh:MM:ss"),
+          "--this.tableData"
+        );
         this.testCount = 0;
         if (this.testType == "2d" && this.wrapDiv) this.wrapDiv.innerHTML = "";
         this.seletedTextShow = false;
