@@ -1,249 +1,363 @@
 <template>
   <div>
-    <div style="position: absolute; right: 50px">Version 1.5.0</div>
-    <download-excel
-      class="export-excel-wrapper"
-      :data="json_data"
-      :fields="json_fields"
-      :meta="json_meta"
-      name="远程诊断报告导出.xls"
-    >
-      <!-- 上面可以自定义自己的样式，还可以引用其他组件button -->
-
-      <el-button type="primary" size="small">导出EXCEL</el-button>
-    </download-excel>
-    <h3 style="margin: 20px 0">
-      {{
-        testType == "2d"
-          ? "平滑运动"
-          : testType == "simulation"
-          ? "抽象模拟场景"
-          : "三维运动"
-      }}视觉追踪训练
-    </h3>
-    <div class="flex" style="justify-content: center">
-      <div style="position: relative">
-        <div
-          class="flex"
-          style="
-            flex-direction: column;
-            align-items: flex-end;
-            position: absolute;
-            bottom: 20px;
-            right: -60px;
-          "
-        >
-          <el-tooltip effect="dark" content="帮助" placement="top-start">
-            <div class="item">
-              <el-button
-                type="primary"
-                @click="helpDialogVisible = true"
-                icon="el-icon-info"
-                circle
-              ></el-button>
-            </div>
-          </el-tooltip>
-          <el-tooltip effect="dark" content="设置" placement="top-start">
-            <div class="item">
-              <el-button
-                type="primary"
-                @click="dialogVisible = true"
-                icon="el-icon-setting"
-                circle
-              ></el-button>
-            </div>
-          </el-tooltip>
-          <el-tooltip
-            effect="dark"
-            :content="isStart ? '关闭' : '开始'"
-            placement="top-start"
-          >
-            <div class="item">
-              <el-button
-                type="primary"
-                @click="init"
-                icon="el-icon-thumb"
-                circle
-              ></el-button>
-            </div>
-          </el-tooltip>
+    <div style="position: absolute; right: 50px">Version 1.6.0</div>
+    <template v-if="showInputUserName">
+      <h3 style="margin: 20px 0">视觉追踪训练</h3>
+      <div class="input-box">
+        <div class="input-div">
+          <el-form label-position="right" label-width="80px">
+            <el-form-item label="训练模式">
+              <div class="from-item">
+                <el-radio-group v-model="testType" @change="radioChange">
+                  <el-radio-button
+                    :label="item.value"
+                    v-for="item in typeList"
+                    :key="item.value"
+                    >{{ item.name }}</el-radio-button
+                  >
+                </el-radio-group>
+              </div>
+            </el-form-item>
+            <el-form-item label="姓名">
+              <div class="from-item" style="width: 292px">
+                <el-input
+                  placeholder="请输入姓名"
+                  suffix-icon="el-icon-user"
+                  v-model="userName"
+                >
+                </el-input>
+              </div>
+            </el-form-item>
+            <el-form-item>
+              <div class="from-item">
+                <el-button type="primary" @click="onSubmit">立即登入</el-button>
+              </div>
+            </el-form-item>
+          </el-form>
         </div>
-        <!-- 平滑运动 -->
-        <div
-          id="wrap"
-          :style="{
-            height: wrapHeight + 'px',
-            width: setW + 'px',
-            backgroundImage: showImageBg ? bg2D && 'url(' + bg2D + ')' : null,
-          }"
-          :class="showImageBg && 'wrap-bg'"
-          v-if="testType == '2d'"
-        ></div>
-        <!-- 抽象场景 -->
-        <template v-else-if="testType == 'simulation'">
+      </div></template
+    >
+    <template v-else>
+      <div style="position: absolute; left: 50px">姓名：{{ userName }}</div>
+      <h3 style="margin: 20px 0">{{ getModeString }}视觉追踪训练</h3>
+      <div class="flex" style="justify-content: center">
+        <div style="position: relative">
+          <!-- 右侧按钮 -->
           <div
-            class="box"
-            :style="{
-              '--scales': ballSize / 40,
-              '--ballSpeed': 30 / ballSpeed + '',
-            }"
+            class="flex"
+            style="
+              flex-direction: column;
+              align-items: flex-end;
+              position: absolute;
+              bottom: 20px;
+              right: -60px;
+            "
           >
-            <div class="container">
-              <!-- <div class="floor"></div> -->
-              <div class="table">
-                <!-- <div class="leg"></div>
+            <el-tooltip effect="dark" content="重新登入" placement="left-start">
+              <div class="item">
+                <el-button
+                  type="primary"
+                  @click="backHome"
+                  icon="el-icon-refresh-right"
+                  circle
+                ></el-button>
+              </div>
+            </el-tooltip>
+            <el-tooltip effect="dark" content="帮助" placement="left-start">
+              <div class="item">
+                <el-button
+                  type="primary"
+                  @click="helpDialogVisible = true"
+                  icon="el-icon-info"
+                  circle
+                ></el-button>
+              </div>
+            </el-tooltip>
+            <el-tooltip
+              effect="dark"
+              content="删除当前模式数据"
+              placement="left-start"
+            >
+              <div class="item">
+                <el-button
+                  type="primary"
+                  @click="deleteData"
+                  icon="el-icon-delete"
+                  circle
+                ></el-button>
+              </div>
+            </el-tooltip>
+            <el-tooltip
+              effect="dark"
+              :content="'导出' + getModeString + '训练数据'"
+              placement="left-start"
+            >
+              <div class="item">
+                <download-excel
+                  class="export-excel-wrapper"
+                  :data="json_data"
+                  :fields="json_fields"
+                  :beforeGenerate="beforeGenerate"
+                  :name="
+                    getModeString +
+                    '模式训练数据' +
+                    getNowTime('yy.mm.dd hh-MM-ss')
+                  "
+                >
+                  <!-- 上面可以自定义自己的样式，还可以引用其他组件button -->
+
+                  <el-button
+                    type="primary"
+                    icon="el-icon-download"
+                    circle
+                  ></el-button>
+                </download-excel>
+              </div>
+            </el-tooltip>
+            <el-tooltip effect="dark" content="设置" placement="left-start">
+              <div class="item">
+                <el-button
+                  type="primary"
+                  @click="dialogVisible = true"
+                  icon="el-icon-setting"
+                  circle
+                ></el-button>
+              </div>
+            </el-tooltip>
+            <el-tooltip
+              effect="dark"
+              :content="isStart ? '关闭' : '开始'"
+              placement="left-start"
+            >
+              <div class="item">
+                <el-button
+                  type="primary"
+                  @click="init"
+                  icon="el-icon-thumb"
+                  circle
+                ></el-button>
+              </div>
+            </el-tooltip>
+          </div>
+          <!-- 平滑运动 -->
+          <div
+            id="wrap"
+            :style="{
+              height: wrapHeight + 'px',
+              width: setW + 'px',
+              backgroundImage: showImageBg ? bg2D && 'url(' + bg2D + ')' : null,
+            }"
+            :class="showImageBg && 'wrap-bg'"
+            v-if="testType == '2d'"
+          ></div>
+          <!-- 抽象场景 -->
+          <template v-else-if="testType == 'simulation'">
+            <div
+              class="box"
+              :style="{
+                '--scales': ballSize / 40,
+                '--ballSpeed': 30 / ballSpeed + '',
+              }"
+            >
+              <div class="container">
+                <!-- <div class="floor"></div> -->
+                <div class="table">
+                  <!-- <div class="leg"></div>
                 <div class="leg"></div>
                 <div class="leg"></div>
                 <div class="leg"></div> -->
-                <div class="net">
-                  <div class="top"></div>
+                  <div class="net">
+                    <div class="top"></div>
+                    <div class="left"></div>
+                    <div class="right"></div>
+                  </div>
+                  <!-- <div class="front">Table tenniCSS - @Amit_Sheen</div>
+                <div class="back">Table tenniCSS - @Amit_Sheen</div> -->
                   <div class="left"></div>
                   <div class="right"></div>
                 </div>
-                <!-- <div class="front">Table tenniCSS - @Amit_Sheen</div>
-                <div class="back">Table tenniCSS - @Amit_Sheen</div> -->
-                <div class="left"></div>
-                <div class="right"></div>
-              </div>
-              <div class="ballWrapper" v-show="ballWrapperShow">
-                <div class="ball"><span class="ball-text">1</span></div>
-                <div class="ballShadow"></div>
+                <div class="ballWrapper" v-show="ballWrapperShow">
+                  <div class="ball"><span class="ball-text">1</span></div>
+                  <div class="ballShadow"></div>
+                </div>
               </div>
             </div>
-          </div>
-        </template>
-        <!-- 三维运动 -->
-        <div v-else-if="testType == '3d'">
-          <div
-            style="
-              width: 700px;
-              margin: 0 auto;
-              perspective: 460px;
-              background-color: rgb(28, 121, 167);
-            "
-            :style="{
-              width: wrapHeight + 'px',
-              height: wrapHeight + 'px',
-            }"
-          >
+          </template>
+          <!-- 三维运动 -->
+          <div v-else-if="testType == '3d'">
             <div
-              class="pit"
-              style="width: 700px; height: 700px; transform-style: preserve-3d"
+              style="
+                width: 700px;
+                margin: 0 auto;
+                perspective: 460px;
+                background-color: rgb(28, 121, 167);
+              "
               :style="{
                 width: wrapHeight + 'px',
                 height: wrapHeight + 'px',
               }"
             >
               <div
+                class="pit"
                 style="
-                  position: absolute;
-                  box-shadow: 0px -15px 50px 50px rgb(0 0 0 / 30%) inset;
-                  left: 0px;
-                  top: 0px;
                   width: 700px;
                   height: 700px;
-                  transform: translateZ(-1400px);
+                  transform-style: preserve-3d;
                 "
                 :style="{
                   width: wrapHeight + 'px',
                   height: wrapHeight + 'px',
-                  transform: 'translateZ(-' + 2 * wrapHeight + 'px)',
                 }"
-                class="ball3d-bg"
-              ></div>
-              <div
-                style="
-                  position: absolute;
-                  box-shadow: -50px 0px 50px 35px rgb(0 0 0 / 30%) inset;
-                  left: 0px;
-                  top: 0px;
-                  width: 1400px;
-                  height: 700px;
-                  transform-origin: 0% 50%;
-                  transform: rotateY(90deg);
-                "
-                class="ball3d-bg"
-                :style="{
-                  width: 2 * wrapHeight + 'px',
-                  height: wrapHeight + 'px',
-                }"
-              ></div>
-              <div
-                style="
-                  position: absolute;
-                  box-shadow: 50px 0px 50px 35px rgb(0 0 0 / 30%) inset;
-                  top: 0px;
-                  width: 1400px;
-                  height: 700px;
-                  right: 0px;
-                  transform-origin: 100% 50%;
-                  transform: rotateY(-90deg);
-                "
-                class="ball3d-bg"
-                :style="{
-                  width: 2 * wrapHeight + 'px',
-                  height: wrapHeight + 'px',
-                }"
-              ></div>
-              <div
-                style="
-                  position: absolute;
-                  box-shadow: 0px -50px 50px 35px rgb(0 0 0 / 30%) inset;
-                  left: 0px;
-                  top: 0px;
-                  width: 700px;
-                  height: 1400px;
-                  transform-origin: 50% 0%;
-                  transform: rotateX(-90deg);
-                "
-                class="ball3d-bg"
-                :style="{
-                  width: wrapHeight + 'px',
-                  height: 2 * wrapHeight + 'px',
-                }"
-              ></div>
-              <div
-                style="
-                  position: absolute;
-                  box-shadow: 0px 50px 50px 35px rgb(0 0 0 / 30%) inset;
-                  left: 0px;
-                  width: 700px;
-                  height: 1400px;
-                  bottom: 0px;
-                  transform-origin: 50% 100%;
-                  transform: rotateX(90deg);
-                "
-                class="ball3d-bg"
-                :style="{
-                  width: wrapHeight + 'px',
-                  height: 2 * wrapHeight + 'px',
-                }"
-              ></div>
-              <canvas
-                id="canvas"
-                :height="wrapHeight + 'px'"
-                :width="wrapHeight + 'px'"
-              ></canvas>
+              >
+                <div
+                  style="
+                    position: absolute;
+                    box-shadow: 0px -15px 50px 50px rgb(0 0 0 / 30%) inset;
+                    left: 0px;
+                    top: 0px;
+                    width: 700px;
+                    height: 700px;
+                    transform: translateZ(-1400px);
+                  "
+                  :style="{
+                    width: wrapHeight + 'px',
+                    height: wrapHeight + 'px',
+                    transform: 'translateZ(-' + 2 * wrapHeight + 'px)',
+                  }"
+                  class="ball3d-bg"
+                ></div>
+                <div
+                  style="
+                    position: absolute;
+                    box-shadow: -50px 0px 50px 35px rgb(0 0 0 / 30%) inset;
+                    left: 0px;
+                    top: 0px;
+                    width: 1400px;
+                    height: 700px;
+                    transform-origin: 0% 50%;
+                    transform: rotateY(90deg);
+                  "
+                  class="ball3d-bg"
+                  :style="{
+                    width: 2 * wrapHeight + 'px',
+                    height: wrapHeight + 'px',
+                  }"
+                ></div>
+                <div
+                  style="
+                    position: absolute;
+                    box-shadow: 50px 0px 50px 35px rgb(0 0 0 / 30%) inset;
+                    top: 0px;
+                    width: 1400px;
+                    height: 700px;
+                    right: 0px;
+                    transform-origin: 100% 50%;
+                    transform: rotateY(-90deg);
+                  "
+                  class="ball3d-bg"
+                  :style="{
+                    width: 2 * wrapHeight + 'px',
+                    height: wrapHeight + 'px',
+                  }"
+                ></div>
+                <div
+                  style="
+                    position: absolute;
+                    box-shadow: 0px -50px 50px 35px rgb(0 0 0 / 30%) inset;
+                    left: 0px;
+                    top: 0px;
+                    width: 700px;
+                    height: 1400px;
+                    transform-origin: 50% 0%;
+                    transform: rotateX(-90deg);
+                  "
+                  class="ball3d-bg"
+                  :style="{
+                    width: wrapHeight + 'px',
+                    height: 2 * wrapHeight + 'px',
+                  }"
+                ></div>
+                <div
+                  style="
+                    position: absolute;
+                    box-shadow: 0px 50px 50px 35px rgb(0 0 0 / 30%) inset;
+                    left: 0px;
+                    width: 700px;
+                    height: 1400px;
+                    bottom: 0px;
+                    transform-origin: 50% 100%;
+                    transform: rotateX(90deg);
+                  "
+                  class="ball3d-bg"
+                  :style="{
+                    width: wrapHeight + 'px',
+                    height: 2 * wrapHeight + 'px',
+                  }"
+                ></div>
+                <canvas
+                  id="canvas"
+                  :height="wrapHeight + 'px'"
+                  :width="wrapHeight + 'px'"
+                ></canvas>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="flex bottom">
-      <!-- <div class="flex-speed">
-        <el-form label-width="80px">
+      <div class="flex bottom">
+        <div style="width: 50%">
+          <el-table :data="tableData" stripe style="width: 100%">
+            <el-table-column
+              align="center"
+              prop="testCount"
+              label="当前测试数量"
+            >
+            </el-table-column>
+            <el-table-column align="center" prop="correct" label="正确数量">
+            </el-table-column>
+            <el-table-column align="center" prop="mistake" label="错误数量">
+            </el-table-column>
+            <el-table-column align="center" prop="nulls" label="选空数量">
+            </el-table-column>
+          </el-table>
+        </div>
+      </div>
+      <div id="text" class="ball-text" v-show="seletedTextShow">
+        <p
+          v-for="(item, index) in textArr"
+          :key="index"
+          @click.stop="seletedText"
+        >
+          {{ item }}
+        </p>
+      </div>
+      <!-- 设置 -->
+      <el-dialog
+        title="设置"
+        width="45%"
+        top="8vh"
+        :visible.sync="dialogVisible"
+      >
+        <el-form label-width="180px">
+          <el-form-item label="切换视觉追踪训练模式">
+            <el-radio-group v-model="testType" @change="radioChange">
+              <el-radio-button
+                :label="item.value"
+                v-for="item in typeList"
+                :key="item.value"
+                >{{ item.name }}</el-radio-button
+              >
+            </el-radio-group>
+          </el-form-item>
           <el-form-item label="速度">
             <el-input-number
               :min="10"
+              :max="120"
               v-model="ballSpeed"
               :step="10"
             ></el-input-number>
           </el-form-item>
-        </el-form>
-      </div>
-      <div class="flex-speed">
-        <el-form label-width="150px">
           <el-form-item label="间隔时间（ms）">
             <el-input-number
               :min="300"
@@ -251,11 +365,21 @@
               :step="100"
             ></el-input-number>
           </el-form-item>
-        </el-form>
-      </div>
-      <div class="flex-speed">
-        <el-form label-width="150px">
-          <el-form-item label="大小">
+          <el-form-item label="每组测试次数">
+            <el-input-number
+              :min="120"
+              :max="12000"
+              v-model="maxTestCount"
+              :step="10"
+            ></el-input-number>
+          </el-form-item>
+          <el-form-item
+            :label="
+              testType !== 'simulation'
+                ? '球体大小'
+                : '球体大小(整体大小将改变)'
+            "
+          >
             <el-input-number
               :min="10"
               :max="100"
@@ -263,106 +387,38 @@
               :step="5"
             ></el-input-number>
           </el-form-item>
-        </el-form>
-      </div> -->
-      <div style="width: 50%">
-        <el-table :data="tableData" stripe style="width: 100%">
-          <el-table-column align="center" prop="testCount" label="当前测试数量">
-          </el-table-column>
-          <el-table-column align="center" prop="correct" label="正确数量">
-          </el-table-column>
-          <el-table-column align="center" prop="Mistake" label="错误数量">
-          </el-table-column>
-          <el-table-column align="center" prop="nulls" label="选空数量">
-          </el-table-column>
-        </el-table>
-      </div>
-    </div>
-    <div id="text" class="ball-text" v-show="seletedTextShow">
-      <p
-        v-for="(item, index) in textArr"
-        :key="index"
-        @click.stop="seletedText"
-      >
-        {{ item }}
-      </p>
-    </div>
-    <!-- 设置 -->
-    <el-dialog title="设置" width="45%" top="8vh" :visible.sync="dialogVisible">
-      <el-form label-width="180px">
-        <el-form-item label="切换视觉追踪训练模式">
-          <!-- <el-switch
-            v-model="testType"
-            active-color="#13ce66"
-            inactive-color="#ff4949"
-            inactive-value="3d"
-            active-value="2d"
-            inactive-text="三维运动"
-            active-text="平滑运动"
-            @change="switchChange"
-          >
-          </el-switch> -->
-          <el-radio-group v-model="testType" @change="radioChange">
-            <el-radio-button
-              :label="item.value"
-              v-for="item in typeList"
-              :key="item.value"
-              >{{ item.name }}</el-radio-button
+          <el-form-item label="测试窗口大小" v-if="testType !== 'simulation'">
+            <el-input-number
+              :min="400"
+              :max="700"
+              v-model="wrapHeight"
+              :step="50"
+            ></el-input-number>
+          </el-form-item>
+          <!-- <el-form-item label="训练数据">
+            <download-excel
+              class="export-excel-wrapper"
+              :data="json_data"
+              :fields="json_fields"
+              :beforeGenerate="beforeGenerate"
+              :name="getModeString + '模式训练数据'"
             >
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="速度">
-          <el-input-number
-            :min="10"
-            :max="120"
-            v-model="ballSpeed"
-            :step="10"
-          ></el-input-number>
-        </el-form-item>
-        <el-form-item label="间隔时间（ms）">
-          <el-input-number
-            :min="300"
-            v-model="textTime"
-            :step="100"
-          ></el-input-number>
-        </el-form-item>
-        <el-form-item label="每组测试次数">
-          <el-input-number
-            :min="120"
-            :max="12000"
-            v-model="maxTestCount"
-            :step="10"
-          ></el-input-number>
-        </el-form-item>
-        <el-form-item
-          :label="
-            testType !== 'simulation' ? '球体大小' : '球体大小(整体大小将改变)'
-          "
-        >
-          <el-input-number
-            :min="10"
-            :max="100"
-            v-model="ballSize"
-            :step="5"
-          ></el-input-number>
-        </el-form-item>
-        <el-form-item label="测试窗口大小" v-if="testType !== 'simulation'">
-          <el-input-number
-            :min="400"
-            :max="700"
-            v-model="wrapHeight"
-            :step="50"
-          ></el-input-number>
-        </el-form-item>
-        <!-- <el-form-item
-          :label="(showImageBg ? '关闭' : '加载') + '抽象模拟场景'"
+           
+
+              <el-button type="primary" size="small"
+                >导出{{ getModeString }}训练数据</el-button
+              >
+            </download-excel>
+          </el-form-item> -->
+          <!-- <el-form-item
+          :label="(showImageBg ? '关闭' : '加载') + '抽象模拟'"
           v-if="testType == '2d'"
         >
           <el-button
             size="small"
             type="primary"
             @click="showImageBg = !showImageBg"
-            >{{ showImageBg ? "关闭" : "加载" }}抽象模拟场景</el-button
+            >{{ showImageBg ? "关闭" : "加载" }}抽象模拟</el-button
           >
         </el-form-item>
         <el-form-item
@@ -373,107 +429,110 @@
             <el-button size="small" type="primary">点击选择场景图片</el-button>
           </el-upload>
         </el-form-item> -->
-      </el-form>
+        </el-form>
 
-      <el-button
-        style="margin-top: 30px"
-        type="primary"
-        @click="dialogVisible = false"
-        >确 定</el-button
+        <el-button
+          style="margin-top: 30px"
+          type="primary"
+          @click="dialogVisible = false"
+          >确 定</el-button
+        >
+      </el-dialog>
+      <el-dialog
+        title="本次测试结果"
+        width="30%"
+        :visible.sync="rulsetShow"
+        :close-on-click-modal="false"
       >
-    </el-dialog>
-    <el-dialog
-      title="本次测试结果"
-      width="30%"
-      :visible.sync="rulsetShow"
-      :close-on-click-modal="false"
-    >
-      <el-table :data="tableData" stripe style="width: 100%">
-        <el-table-column align="center" prop="allCount" label="本组总数">
-        </el-table-column>
-        <el-table-column align="center" prop="correct" label="正确数量">
-        </el-table-column>
-        <el-table-column align="center" prop="Mistake" label="错误数量">
-        </el-table-column>
-        <el-table-column align="center" prop="nulls" label="选空数量">
-        </el-table-column>
-      </el-table>
-      <el-button
-        style="margin-top: 30px"
-        type="primary"
-        @click="rulsetShow = false"
-        >确 定</el-button
-      >
-    </el-dialog>
-    <el-dialog title="帮助" width="90%" :visible.sync="helpDialogVisible">
-      <div style="text-align: left">
-        <h3 style="text-align: left">（ 1 ）产品介绍</h3>
-        <p>
-          运用视觉运动追踪的理论和原则结合计算机技术，初步设计开发“视觉运动
-          追踪训练系统”。该训练系统包括 3 个模块：平滑运动视觉追踪训练、三维运动
-          视觉追踪训练和抽象模拟场景视觉追踪训练。平滑运动视觉追踪训练系统不但可
-          以对个体的视觉运动追踪能力进行任意时长的训练，同时为了防止训练者在训练
-          过程中出现注意力不集中，系统专门设计了防止训练者分心的按键装置，同时该
-          系统还可随时设置物体运动的速度和运动物体的大小，以满足不同训练者的训练
-          需求；三维运动视觉追踪训练系统运用 3D
-          效果制作三维球体由远及近以及由近及
-          远的两段飞行视频，飞行速度可自行调节，使用者可以根据不同训练
-          者的需要进行选择，用以训练个体的时空视知觉；抽象模拟场景视觉追踪训练模
-          块在抽象模拟乒乓球运动场景的基础上，根据乒乓球比赛真实视频中乒乓球的飞行线路、
-          落点进行抽象模拟，用于乒乓球运动的专项视觉运动追踪训练。根据练习者的不同
-          训练要求可随时更改球的速度、落点、球体的大小以及训练时长，同时训练系统
-          仍然提供了防止练习者分心的按键设置，并给予量化评价。
-        </p>
-        <h3 style="text-align: left">（ 2 ）平滑运动视觉追踪训练使用说明</h3>
-        <p>
-          打开“平滑运动视觉追踪训练”，使用者可根据需要按加速或减速键控制球
-          的飞行速度，还可以根绝需要选择球的大小，同时系统提供了防止训练者分心的
-          65 按键装置。分心按键设置如下：在飞行的球体上会随机呈现数字“ 0 ”或“ 1
-          ”， 默认呈现时间为 500ms（可自行调节）
-          ，当数字出现时要求被试尽快按下相应的按键（出现“ 0 ”请按 下“ Z或方向左
-          ”键，出现“ 1 ”请按下“ M或方向右 ”键），其中飞行速度默认为 30m/s
-          ，球体大小，“0”或“1”变化时间间隔，窗口大小等可调，
-          使用者可根据不同训练者的需要选用不同参数的视觉运动追踪训练。系统会自动记录训练者按键正确的次数和数字呈现的总次数，并显示在界面
-          下方中央。
-        </p>
-        <h3 style="text-align: left">（ 3 ）三维运动视觉追踪训练使用说明</h3>
-        <p>
-          打开“三维运动视觉追踪训练”，其中飞行速度默认为 30m/s
-          ，球体大小，“0”或“1”变化时间间隔，窗口大小等可调，
-          使用者可根据不同训练者的需要选用不同参数的视觉运动追踪训练。
-        </p>
-        <h3 style="text-align: left">
-          （ 4 ）抽象模拟场景视觉追踪训练使用说明
-        </h3>
-        <p>
-          切换“平滑运动视觉追踪训练”，点击设置按钮，加载模拟场景（可自行更换场景图片），界面默认会呈现一个抽象的模拟乒乓球场和
-          位于对方底线中央的视觉追踪目标乒乓球，按下“开始”键，乒乓球将以“ 20
-          ”的初
-          始速度进行模拟比赛飞行，训练者以运动员的视角进行视觉运动追踪训练。界面
-          底部提供可以随时调节球飞行速度、大小、落点的按键，同时系统还提供了防止
-          训练者分心的按键装置和分心量化评价统计系统。分心按键设置如下：在飞行的球体上会随机呈现数字“
-          0 ”或“ 1 ”， 默认呈现时间为 500ms（可自行调节）
-          ，当数字出现时要求被试尽快按下相应的按键（出现“ 0 ”请按 下“ Z或方向左
-          ”键，出现“ 1 ”请按下“ M或方向右 ”键）。其中飞行速度默认为 30m/s
-          ，球体大小，“0”或“1”变化时间间隔，窗口大小等可调，
-          使用者可根据不同训练者的需要选用不同参数的视觉运动追踪训练。系统会自动记录训练者按键正确的次数和数字呈现的总次数，并显示在界面
-          下方中央。
-        </p>
-        <h3>（5）操作说明</h3>
-        <p>
-          点击开始后,随机出现数字,0 ：请按 下“ Z或方向左 ”键 ; “ 1 ”：请按下“
-          M或方向右
-          ”键。设置：球体运动速度，数字变化时间间隔，每组测试总数，测试窗口大小等可自行调节。
-        </p>
-      </div>
+        <el-table :data="tableData" stripe style="width: 100%">
+          <el-table-column align="center" prop="allCount" label="本组总数">
+          </el-table-column>
+          <el-table-column align="center" prop="correct" label="正确数量">
+          </el-table-column>
+          <el-table-column align="center" prop="mistake" label="错误数量">
+          </el-table-column>
+          <el-table-column align="center" prop="nulls" label="选空数量">
+          </el-table-column>
+        </el-table>
+        <el-button
+          style="margin-top: 30px"
+          type="primary"
+          @click="rulsetShow = false"
+          >确 定</el-button
+        >
+      </el-dialog>
+      <el-dialog title="帮助" width="90%" :visible.sync="helpDialogVisible">
+        <div style="text-align: left">
+          <h3 style="text-align: left">（ 1 ）产品介绍</h3>
+          <p>
+            运用视觉运动追踪的理论和原则结合计算机技术，初步设计开发“视觉运动
+            追踪训练系统”。该训练系统包括 3
+            个模块：平滑运动视觉追踪训练、三维运动
+            视觉追踪训练和抽象模拟场景视觉追踪训练。平滑运动视觉追踪训练系统不但可
+            以对个体的视觉运动追踪能力进行任意时长的训练，同时为了防止训练者在训练
+            过程中出现注意力不集中，系统专门设计了防止训练者分心的按键装置，同时该
+            系统还可随时设置物体运动的速度和运动物体的大小，以满足不同训练者的训练
+            需求；三维运动视觉追踪训练系统运用 3D
+            效果制作三维球体由远及近以及由近及
+            远的两段飞行视频，飞行速度可自行调节，使用者可以根据不同训练
+            者的需要进行选择，用以训练个体的时空视知觉；抽象模拟场景视觉追踪训练模
+            块在抽象模拟乒乓球运动场景的基础上，根据乒乓球比赛真实视频中乒乓球的飞行线路、
+            落点进行抽象模拟，用于乒乓球运动的专项视觉运动追踪训练。根据练习者的不同
+            训练要求可随时更改球的速度、落点、球体的大小以及训练时长，同时训练系统
+            仍然提供了防止练习者分心的按键设置，并给予量化评价。
+          </p>
+          <h3 style="text-align: left">（ 2 ）平滑运动视觉追踪训练使用说明</h3>
+          <p>
+            打开“平滑运动视觉追踪训练”，使用者可根据需要按加速或减速键控制球
+            的飞行速度，还可以根绝需要选择球的大小，同时系统提供了防止训练者分心的
+            65 按键装置。分心按键设置如下：在飞行的球体上会随机呈现数字“ 0 ”或“
+            1 ”， 默认呈现时间为 500ms（可自行调节）
+            ，当数字出现时要求被试尽快按下相应的按键（出现“ 0 ”请按 下“
+            Z或方向左 ”键，出现“ 1 ”请按下“ M或方向右 ”键），其中飞行速度默认为
+            30m/s ，球体大小，“0”或“1”变化时间间隔，窗口大小等可调，
+            使用者可根据不同训练者的需要选用不同参数的视觉运动追踪训练。系统会自动记录训练者按键正确的次数和数字呈现的总次数，并显示在界面
+            下方中央。
+          </p>
+          <h3 style="text-align: left">（ 3 ）三维运动视觉追踪训练使用说明</h3>
+          <p>
+            打开“三维运动视觉追踪训练”，其中飞行速度默认为 30m/s
+            ，球体大小，“0”或“1”变化时间间隔，窗口大小等可调，
+            使用者可根据不同训练者的需要选用不同参数的视觉运动追踪训练。
+          </p>
+          <h3 style="text-align: left">
+            （ 4 ）抽象模拟场景视觉追踪训练使用说明
+          </h3>
+          <p>
+            切换“平滑运动视觉追踪训练”，点击设置按钮，加载模拟场景（可自行更换场景图片），界面默认会呈现一个抽象的模拟乒乓球场和
+            位于对方底线中央的视觉追踪目标乒乓球，按下“开始”键，乒乓球将以“ 20
+            ”的初
+            始速度进行模拟比赛飞行，训练者以运动员的视角进行视觉运动追踪训练。界面
+            底部提供可以随时调节球飞行速度、大小、落点的按键，同时系统还提供了防止
+            训练者分心的按键装置和分心量化评价统计系统。分心按键设置如下：在飞行的球体上会随机呈现数字“
+            0 ”或“ 1 ”， 默认呈现时间为 500ms（可自行调节）
+            ，当数字出现时要求被试尽快按下相应的按键（出现“ 0 ”请按 下“
+            Z或方向左 ”键，出现“ 1 ”请按下“ M或方向右 ”键）。其中飞行速度默认为
+            30m/s ，球体大小，“0”或“1”变化时间间隔，窗口大小等可调，
+            使用者可根据不同训练者的需要选用不同参数的视觉运动追踪训练。系统会自动记录训练者按键正确的次数和数字呈现的总次数，并显示在界面
+            下方中央。
+          </p>
+          <h3>（5）操作说明</h3>
+          <p>
+            点击开始后,随机出现数字,0 ：请按 下“ Z或方向左 ”键 ; “ 1 ”：请按下“
+            M或方向右
+            ”键。设置：球体运动速度，数字变化时间间隔，每组测试总数，测试窗口大小等可自行调节。
+            点击“关闭”自动保存本组数据。
+          </p>
+        </div>
 
-      <el-button
-        style="margin-top: 30px"
-        type="primary"
-        @click="helpDialogVisible = false"
-        >确 定</el-button
-      >
-    </el-dialog>
+        <el-button
+          style="margin-top: 30px"
+          type="primary"
+          @click="helpDialogVisible = false"
+          >确 定</el-button
+        >
+      </el-dialog>
+    </template>
   </div>
 </template>
 
@@ -495,29 +554,31 @@ function randomNum(m, n) {
  * @param {Boolean} immediate 是否立即执行
  * @return null
  */
-//var timeout = null;
-// function debounce(func, wait = 250, immediate = false) {
-//   // 清除定时器
-//   if (timeout !== null) clearTimeout(timeout);
-//   // 立即执行，此类情况一般用不到
-//   if (immediate) {
-//     var callNow = !timeout;
-//     timeout = setTimeout(function () {
-//       timeout = null;
-//     }, wait);
-//     if (callNow) typeof func === "function" && func();
-//   } else {
-//     // 设置定时器，当最后一次操作后，timeout不会再被清除，所以在延时wait毫秒后执行func回调方法
-//     timeout = setTimeout(function () {
-//       typeof func === "function" && func();
-//     }, wait);
-//   }
-// }
+var timeout = null;
+function debounce(func, wait = 250, immediate = false) {
+  // 清除定时器
+  if (timeout !== null) clearTimeout(timeout);
+  // 立即执行，此类情况一般用不到
+  if (immediate) {
+    var callNow = !timeout;
+    timeout = setTimeout(function () {
+      timeout = null;
+    }, wait);
+    if (callNow) typeof func === "function" && func();
+  } else {
+    // 设置定时器，当最后一次操作后，timeout不会再被清除，所以在延时wait毫秒后执行func回调方法
+    timeout = setTimeout(function () {
+      typeof func === "function" && func();
+    }, wait);
+  }
+}
 import timeFormat from "@/util/timeFormat";
 export default {
   name: "pingpong",
   data() {
     return {
+      userName: "", //当前测试人员姓名
+      showInputUserName: true, //输入姓名
       //this.获得wrapDiv
       wrapDiv: document.getElementById("wrap"),
       wrapHeight: 500, //测试界面高度
@@ -540,11 +601,11 @@ export default {
       tableData: [
         //记录训练过程
         {
-          testCount: 0,
-          allCount: 0,
-          correct: 0,
-          Mistake: 0,
-          nulls: 0,
+          testCount: 0, //当前测试数量
+          allCount: 0, //本组总数
+          correct: 0, //正确数量
+          mistake: 0, //错误数量
+          nulls: 0, //选空数量
         },
       ], //结果表格
       testType: "2d", //测试类型
@@ -572,54 +633,15 @@ export default {
         },
       ],
       json_fields: {
-        "名称": "name", //常规字段
-
-        "头部-联系电话": "phone.mobile", //支持嵌套属性
-
-        "头部-损坏区域代码": {
-          field: "phone.landline",
-
-          //自定义回调函数
-
-          callback: (value) => {
-            return `损坏区域代码 - ${value}`;
-          },
-        },
+        姓名: "name", //常规字段
+        本组总数: "allCount", //支持嵌套属性
+        正确数量: "correct",
+        错误数量: "mistake",
+        选空数量: "nulls",
+        时间: "time",
       },
 
-      json_data: [
-        {
-          name: "损坏的组件一",
-
-          city: "New York",
-
-          country: "United States",
-
-          birthdate: "1978-03-15",
-
-          phone: {
-            mobile: "1-541-754-3010",
-
-            landline: "(541) 754-3010",
-          },
-        },
-
-        {
-          name: "损坏的组件二",
-
-          city: "Athens",
-
-          country: "Greece",
-
-          birthdate: "1987-11-23",
-
-          phone: {
-            mobile: "+1 855 275 5071",
-
-            landline: "(2741) 2621-244",
-          },
-        },
-      ],
+      json_data: [],
     };
   },
   watch: {
@@ -653,6 +675,15 @@ export default {
       }
     },
   },
+  computed: {
+    getModeString() {
+      return this.testType == "2d"
+        ? "平滑运动"
+        : this.testType == "simulation"
+        ? "抽象模拟"
+        : "三维运动";
+    },
+  },
   mounted() {
     window.onresize = () => {
       this.setW = document.body.clientWidth * 0.8;
@@ -660,6 +691,24 @@ export default {
     };
   },
   methods: {
+    onSubmit() {
+      debounce(() => {
+        if (this.userName) {
+          this.showInputUserName = false;
+        } else {
+          this.$message({
+            message: "请输入训练人员名称",
+            center: true,
+            type: "warning",
+            duration: 1000,
+            offset: 100,
+          });
+        }
+      }, 500);
+    },
+    backHome() {
+      location.reload();
+    },
     callFile() {
       //点击添加图片按钮，触发type:"file"的input标签
       let fileDom = document.querySelector("#file");
@@ -745,24 +794,27 @@ export default {
     },
     //选择0/1
     seletedText(event) {
-      this.isClickEnd = false; //选择后的状态值
-      console.log(event.target.innerText);
-      let showText =
-        this.testType == "2d"
-          ? this.wrapDiv.childNodes[0].innerText
-          : this.showText;
-      if (showText) {
-        if (event.target.innerText == showText) {
-          console.log("选对了");
-          this.tableData[0].correct++;
-          this.randomText();
+      if (this.isClickEnd) {
+        //未选择时
+        this.isClickEnd = false; //选择后的状态值
+        console.log(event.target.innerText);
+        let showText =
+          this.testType == "2d"
+            ? this.wrapDiv.childNodes[0].innerText
+            : this.showText;
+        if (showText) {
+          if (event.target.innerText == showText) {
+            console.log("选对了");
+            this.tableData[0].correct++;
+            this.randomText();
+          } else {
+            this.tableData[0].mistake++;
+            console.log("选错了");
+          }
         } else {
-          this.tableData[0].Mistake++;
-          console.log("选错了");
+          this.tableData[0].nulls++;
+          console.log("选空了");
         }
-      } else {
-        this.tableData[0].nulls++;
-        console.log("选空了");
       }
     },
     //2d测试初始化
@@ -778,7 +830,7 @@ export default {
             testCount: 0,
             allCount: 0,
             correct: 0,
-            Mistake: 0,
+            mistake: 0,
             nulls: 0,
           },
         ];
@@ -822,17 +874,14 @@ export default {
         tableData.push(
           Object.assign(
             {
-              time: timeFormat(Date.now(), "yy/mm/dd hh:MM:ss"),
+              time: this.getNowTime(),
+              name: this.userName,
             },
             this.tableData[0]
           )
         );
         localStorage.setItem(this.testType, JSON.stringify(tableData));
-        console.log(
-          this.tableData,
-          timeFormat(Date.now(), "yy/mm/dd hh:MM:ss"),
-          "--this.tableData"
-        );
+        console.log(this.tableData, this.getNowTime(), "--this.tableData");
         this.testCount = 0;
         if (this.testType == "2d" && this.wrapDiv) this.wrapDiv.innerHTML = "";
         this.seletedTextShow = false;
@@ -863,29 +912,26 @@ export default {
       keyEvent = keyEvent ? keyEvent : window.event;
       var keyCode =
         keyEvent.keyCode || keyEvent.which || keyEvent.charCode || keyEvent;
-      if (this.isClickEnd) {
-        //未选择时
-        console.log(keyCode, "--keyCode");
-        switch (keyCode) {
-          case 90: //Z
-          case 37: //方向左
-            this.seletedText({
-              target: {
-                innerText: 0,
-              },
-            });
-            break;
-          case 77: //M
-          case 39: //方向右
-            this.seletedText({
-              target: {
-                innerText: 1,
-              },
-            });
-            break;
-          default:
-            break;
-        }
+      console.log(keyCode, "--keyCode");
+      switch (keyCode) {
+        case 90: //Z
+        case 37: //方向左
+          this.seletedText({
+            target: {
+              innerText: 0,
+            },
+          });
+          break;
+        case 77: //M
+        case 39: //方向右
+          this.seletedText({
+            target: {
+              innerText: 1,
+            },
+          });
+          break;
+        default:
+          break;
       }
     },
     //三维训练模式初始化
@@ -1106,11 +1152,79 @@ export default {
         }
       }
     },
+    getNowTime(format) {
+      return timeFormat(Date.now(), format || "yy/mm/dd hh:MM:ss");
+    },
+    //删除某模式数据
+    deleteData() {
+      this.$confirm(
+        "确定删除该" + this.getModeString + "训练模式数据?",
+        "提示",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        }
+      )
+        .then(() => {
+          localStorage.removeItem(this.testType);
+          this.$message({
+            type: "success",
+            message: "删除成功!",
+            offset: 100,
+          });
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消删除",
+            offset: 100,
+          });
+        });
+    },
+    //点击导出表格时
+    beforeGenerate() {
+      let tableData = localStorage.getItem(this.testType)
+        ? JSON.parse(localStorage.getItem(this.testType))
+        : [];
+      if (tableData.length === 0) {
+        this.$message({
+          message: "此训练模式暂无数据",
+          center: true,
+          type: "warning",
+          offset: 100,
+        });
+      } else {
+        this.json_data = tableData;
+      }
+
+      console.log(this.json_data, "---this.json_data");
+    },
   },
 };
 </script>
 
 <style>
+.input-box {
+  width: 100vw;
+  height: 80vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.input-div {
+  width: 35%;
+  background-color: #fafafa;
+  box-shadow: 1px 1px 10px 3px #00000066;
+  padding: 30px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+}
+.from-item {
+  display: flex;
+  width: 100%;
+}
 #wrap {
   height: 600px;
   width: 90%;

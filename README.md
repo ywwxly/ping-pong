@@ -63,3 +63,9 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 5. 添加部分注释
 
 6. 调整平滑训练模式UI
+
+7. 增加导出当前模式数据表格/删除功能
+
+8. 增加登录页面
+
+9. 调整/优化UI
