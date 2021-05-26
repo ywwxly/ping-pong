@@ -1,12 +1,12 @@
 <template>
   <div>
-    <div style="position: absolute; right: 50px">Version 1.3.0</div>
+    <div style="position: absolute; right: 50px">Version 1.5.0</div>
     <h3 style="margin: 20px 0">
       {{
         testType == "2d"
-          ? showImageBg
-            ? "抽象模拟场景"
-            : "平滑运动"
+          ? "平滑运动"
+          : testType == "simulation"
+          ? "抽象模拟场景"
           : "三维运动"
       }}视觉追踪训练
     </h3>
@@ -57,6 +57,7 @@
             </div>
           </el-tooltip>
         </div>
+        <!-- 平滑运动 -->
         <div
           id="wrap"
           :style="{
@@ -67,7 +68,41 @@
           :class="showImageBg && 'wrap-bg'"
           v-if="testType == '2d'"
         ></div>
-        <div v-else>
+        <!-- 抽象场景 -->
+        <template v-else-if="testType == 'simulation'">
+          <div
+            class="box"
+            :style="{
+              '--scales': ballSize / 40,
+              '--ballSpeed': 30 / ballSpeed + '',
+            }"
+          >
+            <div class="container">
+              <!-- <div class="floor"></div> -->
+              <div class="table">
+                <!-- <div class="leg"></div>
+                <div class="leg"></div>
+                <div class="leg"></div>
+                <div class="leg"></div> -->
+                <div class="net">
+                  <div class="top"></div>
+                  <div class="left"></div>
+                  <div class="right"></div>
+                </div>
+                <!-- <div class="front">Table tenniCSS - @Amit_Sheen</div>
+                <div class="back">Table tenniCSS - @Amit_Sheen</div> -->
+                <div class="left"></div>
+                <div class="right"></div>
+              </div>
+              <div class="ballWrapper" v-show="ballWrapperShow">
+                <div class="ball"><span class="ball-text">1</span></div>
+                <div class="ballShadow"></div>
+              </div>
+            </div>
+          </div>
+        </template>
+        <!-- 三维运动 -->
+        <div v-else-if="testType == '3d'">
           <div
             style="
               width: 700px;
@@ -242,10 +277,10 @@
       </p>
     </div>
     <!-- 设置 -->
-    <el-dialog title="设置" width="35%" top="8vh" :visible.sync="dialogVisible">
-      <el-form label-width="170px">
+    <el-dialog title="设置" width="45%" top="8vh" :visible.sync="dialogVisible">
+      <el-form label-width="180px">
         <el-form-item label="切换视觉追踪训练模式">
-          <el-switch
+          <!-- <el-switch
             v-model="testType"
             active-color="#13ce66"
             inactive-color="#ff4949"
@@ -255,11 +290,20 @@
             active-text="平滑运动"
             @change="switchChange"
           >
-          </el-switch>
+          </el-switch> -->
+          <el-radio-group v-model="testType" @change="radioChange">
+            <el-radio-button
+              :label="item.value"
+              v-for="item in typeList"
+              :key="item.value"
+              >{{ item.name }}</el-radio-button
+            >
+          </el-radio-group>
         </el-form-item>
         <el-form-item label="速度">
           <el-input-number
             :min="10"
+            :max="120"
             v-model="ballSpeed"
             :step="10"
           ></el-input-number>
@@ -279,7 +323,11 @@
             :step="10"
           ></el-input-number>
         </el-form-item>
-        <el-form-item label="球体大小">
+        <el-form-item
+          :label="
+            testType !== 'simulation' ? '球体大小' : '球体大小(整体大小将改变)'
+          "
+        >
           <el-input-number
             :min="10"
             :max="100"
@@ -287,7 +335,7 @@
             :step="5"
           ></el-input-number>
         </el-form-item>
-        <el-form-item label="测试界面大小">
+        <el-form-item label="测试窗口大小" v-if="testType !== 'simulation'">
           <el-input-number
             :min="400"
             :max="700"
@@ -295,7 +343,7 @@
             :step="50"
           ></el-input-number>
         </el-form-item>
-        <el-form-item
+        <!-- <el-form-item
           :label="(showImageBg ? '关闭' : '加载') + '抽象模拟场景'"
           v-if="testType == '2d'"
         >
@@ -313,7 +361,7 @@
           <el-upload class="upload-demo" action="#" :on-change="uploadOnChange">
             <el-button size="small" type="primary">点击选择场景图片</el-button>
           </el-upload>
-        </el-form-item>
+        </el-form-item> -->
       </el-form>
 
       <el-button
@@ -441,7 +489,6 @@ export default {
   name: "pingpong",
   data() {
     return {
-      ballSpeed: 30, //初始速度
       //this.获得wrapDiv
       wrapDiv: document.getElementById("wrap"),
       wrapHeight: 500, //测试界面高度
@@ -454,6 +501,7 @@ export default {
       setW: window.innerWidth * 0.8,
       textTime: 500, //间隔时间
       ballSize: 40, //球的大小 px
+      ballSpeed: 30, //初始速度
       helpDialogVisible: false, //帮助信息
       dialogVisible: false, //是否显示设置
       rulsetShow: false, //结果显示
@@ -477,6 +525,22 @@ export default {
       bg2D: "", //模拟场景背景
       showImageBg: false,
       isStart: false, //是否开始
+      ballWrapperShow: false, //抽象场景球体显示/隐藏
+      //训练模式
+      typeList: [
+        {
+          name: "平滑运动",
+          value: "2d",
+        },
+        {
+          name: "三维运动",
+          value: "3d",
+        },
+        {
+          name: "抽象模拟",
+          value: "simulation",
+        },
+      ],
     };
   },
   watch: {
@@ -493,6 +557,21 @@ export default {
     },
     textTime() {
       this.randomText();
+    },
+    ballSpeed() {
+      if (this.testType == "3d" && this.isStart) {
+        this.circles = [
+          {
+            x: 0,
+            y: 100,
+            z: 50,
+            // r: this.ballSize,
+            xspeed: this.ballSpeed / 6,
+            yspeed: this.ballSpeed / 6,
+            zspeed: this.ballSpeed,
+          },
+        ];
+      }
     },
   },
   mounted() {
@@ -530,6 +609,11 @@ export default {
     },
     //模式切换响应
     switchChange() {
+      this.stopTest();
+    },
+    radioChange(e) {
+      console.log(e, this.testType, "---radioChange");
+      // this.testType = e;
       this.stopTest();
     },
     randomText() {
@@ -615,9 +699,11 @@ export default {
         this.animationStop = false;
         if (this.testType == "2d") {
           this.init2D();
-        } else {
+        } else if (this.testType == "3d") {
           console.log(111);
           this.create3DBall();
+        } else {
+          this.ballWrapperShow = true;
         }
         this.seletedTextShow = true;
         for (var i = 0; i < this.balls.length; i++) {
@@ -634,6 +720,7 @@ export default {
     stopTest() {
       console.log("停止");
       if (this.isStart) {
+        this.ballWrapperShow = false;
         this.isStart = false;
         document.removeEventListener("keydown", this.eventKey);
         clearTimeout(this.timer);
@@ -715,9 +802,9 @@ export default {
           y: 100,
           z: 50,
           // r: this.ballSize,
-          xspeed: 5,
-          yspeed: 5,
-          zspeed: 30,
+          xspeed: this.ballSpeed / 6,
+          yspeed: this.ballSpeed / 6,
+          zspeed: this.ballSpeed,
         };
         this.circles.push(obj);
       }
@@ -732,14 +819,14 @@ export default {
       );
       for (var i = 0; i < this.circles.length; i++) {
         var circle = this.circles[i];
-        // circle.x += circle.xspeed;
-        // if (circle.x > 250 || circle.x < -250) {
-        //     circle.xspeed *= -1;
-        // }
-        // circle.y += circle.yspeed;
-        // if (circle.y > 250 || circle.y < -250) {
-        //     circle.yspeed *= -1;
-        // }
+        circle.x += circle.xspeed;
+        if (circle.x > 250 || circle.x < -250) {
+          circle.xspeed *= -1;
+        }
+        circle.y += circle.yspeed;
+        if (circle.y > 250 || circle.y < -250) {
+          circle.yspeed *= -1;
+        }
         circle.z += circle.zspeed;
         if (circle.z > 1200 || circle.z < -50) {
           circle.zspeed *= -1;
@@ -994,5 +1081,412 @@ export default {
 }
 .item {
   margin-top: 20px;
+}
+/* 抽象 */
+.box {
+  font-family: "Montserrat", sans-serif;
+  background-color: #111;
+  color: #fff;
+  /* min-height: 100vh; */
+  width: calc(700px * var(--scales));
+  height: calc(333px * var(--scales));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 1800px;
+  perspective-origin: calc(16.666% * var(--scales)) calc(50%);
+  overflow: hidden;
+  zoom: 1;
+  transform: scale(1);
+}
+.container {
+  position: absolute;
+  top: calc(46%);
+  transform-style: preserve-3d;
+  transform: rotateY(-97deg) rotateX(-1.5deg) rotateZ(16deg);
+}
+.floor {
+  position: absolute;
+  width: 100vmax;
+  height: 100vmax;
+  background-image: radial-gradient(#000d, #0000 33%, #111 66%),
+    repeating-linear-gradient(#afa3 0, transparent 1px 40px, #afa3 41px),
+    repeating-linear-gradient(
+      to left,
+      #afa3 0,
+      transparent 1px 40px,
+      #afa3 41px
+    );
+  transform: translate(-50%, -50%) rotateX(90deg) translateZ(-180px);
+}
+
+.leg {
+  position: absolute;
+  transform-style: preserve-3d;
+  transform: rotateX(-90deg);
+  transform-origin: top;
+}
+.leg:nth-child(1) {
+  top: 36px;
+  left: 36px;
+}
+.leg:nth-child(2) {
+  top: 36px;
+  right: 36px;
+}
+.leg:nth-child(3) {
+  top: 324px;
+  left: 36px;
+}
+.leg:nth-child(4) {
+  top: 324px;
+  right: 36px;
+}
+.leg::after {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: -18px;
+  width: 22px;
+  height: 162px;
+  background-image: linear-gradient(#111, #1111),
+    linear-gradient(to left, #222, #777, #222);
+  border-radius: 0 0 50% 50%/0 0 5px 5px;
+  /* animation: rotate 80s linear infinite reverse; */
+  transform: rotateY(90deg);
+}
+
+.table {
+  position: absolute;
+  top: calc(-180px * var(--scales));
+  left: calc(-360px * var(--scales));
+  height: calc(360px * var(--scales));
+  width: calc(720px * var(--scales));
+  background-color: #066;
+  background-image: radial-gradient(#fff1, #0003),
+    linear-gradient(
+      to left,
+      #fff 6px,
+      #fff0 6px calc(100% - 6px),
+      #fff calc(100% - 6px)
+    ),
+    linear-gradient(
+      #fff 6px,
+      #fff0 6px calc(50% - 3px),
+      #fff calc(50% - 3px) calc(50% + 3px),
+      #fff0 calc(50% + 3px) calc(100% - 6px),
+      #fff calc(100% - 6px)
+    );
+  transform: rotateX(90deg);
+  transform-style: preserve-3d;
+}
+.table > .net {
+  position: absolute;
+  width: 5%;
+  height: 100%;
+  left: 50%;
+  transform: rotateY(-90deg);
+  transform-origin: left;
+  transform-style: preserve-3d;
+  background-image: repeating-linear-gradient(45deg, #aaa 0 1px, #aaa0 1px 4px),
+    repeating-linear-gradient(135deg, #aaa 0 1px, #aaa0 1px 4px);
+  border: 2px solid #fff;
+}
+.table > .net > .top {
+  position: absolute;
+  top: 0;
+  right: -1px;
+  width: 2px;
+  height: 100%;
+  background-color: #ddd;
+  transform: rotateY(90deg);
+}
+.table > .net > .left {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #ccc;
+  transform: rotateX(90deg);
+}
+.table > .net > .right {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #ccc;
+  transform: rotateX(90deg);
+}
+.table > .front {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  height: 18px;
+  background-color: #004d4d;
+  transform: rotateX(-90deg);
+  transform-origin: top;
+}
+.table > .back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 18px;
+  background-color: #004d4d;
+  transform: rotateX(-90deg) rotateY(180deg);
+  transform-origin: top;
+}
+.table > .front,
+.table > .back {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 10.8px;
+  color: #fff9;
+}
+.table > .left {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 100%;
+  background-color: #003333;
+  transform: rotateY(90deg);
+  transform-origin: left;
+}
+.table > .right {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 18px;
+  height: 100%;
+  background-color: #003333;
+  transform: rotateY(-90deg);
+  transform-origin: right;
+}
+
+.ballWrapper {
+  position: absolute;
+  bottom: 1px;
+  transform-style: preserve-3d;
+  /*   -webkit-animation: ballLeft 2.5s infinite cubic-bezier(0.4, 0.5, 0.6, 0.6), ballHeight 0.625s -2.1875s infinite ease-in alternate, ballZ 20s infinite cubic-bezier(0.4, 0.5, 0.6, 0.6); */
+  animation: ballLeft calc(2s * var(--ballSpeed)) infinite
+      cubic-bezier(0.4, 0.5, 0.6, 0.6),
+    ballHeight calc(0.5s * var(--ballSpeed)) calc(-1.75s * var(--ballSpeed))
+      infinite ease-in alternate,
+    ballZ calc(16s * var(--ballSpeed)) infinite cubic-bezier(0.4, 0.5, 0.6, 0.6);
+}
+@-webkit-keyframes ballLeft {
+  0%,
+  100% {
+    left: calc(-354.006px * var(--scales));
+  }
+  50% {
+    left: calc(354.006px * var(--scales));
+  }
+}
+@keyframes ballLeft {
+  0%,
+  100% {
+    left: calc(-354.006px * var(--scales));
+  }
+  50% {
+    left: calc(354.006px * var(--scales));
+  }
+}
+@-webkit-keyframes ballHeight {
+  0% {
+    height: calc(54px * var(--scales));
+  }
+  100% {
+    height: 0;
+  }
+}
+@keyframes ballHeight {
+  0% {
+    height: calc(54px * var(--scales));
+  }
+  100% {
+    height: 0;
+  }
+}
+@-webkit-keyframes ballZ {
+  0%,
+  100% {
+    transform: translateZ(var(--pos0));
+  }
+  6.25% {
+    transform: translateZ(var(--pos1));
+  }
+  12.5% {
+    transform: translateZ(var(--pos2));
+  }
+  18.75% {
+    transform: translateZ(var(--pos3));
+  }
+  25% {
+    transform: translateZ(var(--pos4));
+  }
+  31.25% {
+    transform: translateZ(var(--pos5));
+  }
+  37.5% {
+    transform: translateZ(var(--pos6));
+  }
+  43.75% {
+    transform: translateZ(var(--pos7));
+  }
+  50% {
+    transform: translateZ(var(--pos8));
+  }
+  56.25% {
+    transform: translateZ(var(--pos9));
+  }
+  62.5% {
+    transform: translateZ(var(--pos10));
+  }
+  68.75% {
+    transform: translateZ(var(--pos11));
+  }
+  75% {
+    transform: translateZ(var(--pos12));
+  }
+  81.25% {
+    transform: translateZ(var(--pos13));
+  }
+  87.5% {
+    transform: translateZ(var(--pos14));
+  }
+  93.75% {
+    transform: translateZ(var(--pos15));
+  }
+}
+@keyframes ballZ {
+  0%,
+  100% {
+    transform: translateZ(var(--pos0));
+  }
+  6.25% {
+    transform: translateZ(var(--pos1));
+  }
+  12.5% {
+    transform: translateZ(var(--pos2));
+  }
+  18.75% {
+    transform: translateZ(var(--pos3));
+  }
+  25% {
+    transform: translateZ(var(--pos4));
+  }
+  31.25% {
+    transform: translateZ(var(--pos5));
+  }
+  37.5% {
+    transform: translateZ(var(--pos6));
+  }
+  43.75% {
+    transform: translateZ(var(--pos7));
+  }
+  50% {
+    transform: translateZ(var(--pos8));
+  }
+  56.25% {
+    transform: translateZ(var(--pos9));
+  }
+  62.5% {
+    transform: translateZ(var(--pos10));
+  }
+  68.75% {
+    transform: translateZ(var(--pos11));
+  }
+  75% {
+    transform: translateZ(var(--pos12));
+  }
+  81.25% {
+    transform: translateZ(var(--pos13));
+  }
+  87.5% {
+    transform: translateZ(var(--pos14));
+  }
+  93.75% {
+    transform: translateZ(var(--pos15));
+  }
+}
+.ballWrapper .ball {
+  position: absolute;
+  top: calc(-11.988px * var(--scales));
+  left: calc(-5.994px * var(--scales));
+  width: calc(11.988px * var(--scales));
+  height: calc(11.988px * var(--scales));
+  background-color: #fff;
+  background-image: radial-gradient(
+    circle at 50% 10%,
+    #fff,
+    rgb(136, 136, 136)
+  );
+  border-radius: 50%;
+  transform: rotateY(90deg);
+  text-align: center;
+}
+.ball-text {
+  line-height: calc(11.988px * var(--scales));
+  color: #000;
+  font-size: 16px;
+  transform: scale(0.8);
+}
+.ballWrapper .ballShadow {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: calc(35.964px * var(--scales));
+  height: calc(35.964px * var(--scales));
+  background-image: radial-gradient(#000, #0000 50%);
+  transform: rotateX(-90deg) translateY(calc(11.988px * var(--scales)));
+  /* -webkit-animation: ballShadowTransform 0.625s -2.1875s infinite ease-in alternate; */
+  animation: ballShadowTransform calc(0.5s * var(--ballSpeed))
+    calc(-1.75s * var(--ballSpeed)) infinite ease-in alternate;
+}
+@-webkit-keyframes ballShadowTransform {
+  from {
+    transform: translate(-50%, 50%) rotateX(90deg) scale(4);
+    opacity: 0.1;
+  }
+  to {
+    transform: translate(-50%, 50%) rotateX(90deg) scale(1);
+    opacity: 0.6;
+  }
+}
+@keyframes ballShadowTransform {
+  from {
+    transform: translate(-50%, 50%) rotateX(90deg) scale(4);
+    opacity: 0.1;
+  }
+  to {
+    transform: translate(-50%, 50%) rotateX(90deg) scale(1);
+    opacity: 0.6;
+  }
+}
+:root {
+  --pos0: calc(35px * var(--scales));
+  --pos1: calc(-80px * var(--scales));
+  --pos2: calc(105px * var(--scales));
+  --pos3: calc(-10px * var(--scales));
+  --pos4: calc(-125px * var(--scales));
+  --pos5: calc(60px * var(--scales));
+  --pos6: calc(-55px * var(--scales));
+  --pos7: calc(130px * var(--scales));
+  --pos8: calc(15px * var(--scales));
+  --pos9: calc(-100px * var(--scales));
+  --pos10: calc(85px * var(--scales));
+  --pos11: calc(-30px * var(--scales));
+  --pos12: calc(-145px * var(--scales));
+  --pos13: calc(40px * var(--scales));
+  --pos14: calc(-75px * var(--scales));
+  --pos15: calc(110px * var(--scales));
+  --scales: 1.5;
+  --ballSpeed: 1;
 }
 </style>
