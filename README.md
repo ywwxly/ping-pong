@@ -55,3 +55,5 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 1. 新增抽象模拟模式
 
 2. 优化UI体验
+
+3. 添加按键防抖功能
