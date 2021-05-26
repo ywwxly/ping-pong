@@ -101,7 +101,8 @@
                   :name="
                     getModeString +
                     '模式训练数据' +
-                    getNowTime('yy.mm.dd hh-MM-ss')
+                    getNowTime('yy.mm.dd hh-MM-ss') +
+                    '.xls'
                   "
                 >
                   <!-- 上面可以自定义自己的样式，还可以引用其他组件button -->
@@ -1152,6 +1153,7 @@ export default {
         }
       }
     },
+    //获取当前时间
     getNowTime(format) {
       return timeFormat(Date.now(), format || "yy/mm/dd hh:MM:ss");
     },
