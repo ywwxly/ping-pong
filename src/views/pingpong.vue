@@ -477,15 +477,6 @@ function randomNum(m, n) {
   return Math.floor(Math.random() * (n - m + 1) + m);
 }
 /**
- * 生成一个随机颜色，并返回rgb字符串值
- */
-function randomColor() {
-  var r = randomNum(0, 255);
-  var g = randomNum(0, 255);
-  var b = randomNum(0, 255);
-  return "rgb(" + r + "," + g + "," + b + ")";
-}
-/**
  * 防抖原理：一定时间内，只有最后一次操作，再过wait毫秒后才执行函数
  *
  * @param {Function} func 要执行的回调函数
@@ -923,7 +914,7 @@ export default {
           ball.yflag = false;
         }
         //随机小球的背景颜色
-        ball.style.backgroundColor = randomColor();
+        ball.style.backgroundColor = "#ffffff";
         // ball.innerHTML = i + 1;
         //this.将小球插入当wrapDiv中
         this.wrapDiv.appendChild(ball);
@@ -1050,7 +1041,7 @@ export default {
   position: relative;
   margin: 0 auto;
   overflow: hidden;
-  background-color: #44715a;
+  background-color: #0045c2;
   background-size: 100% 100%;
 }
 .wrap-bg {
@@ -1064,7 +1055,7 @@ export default {
   position: absolute;
   top: 0;
   left: 0;
-  color: white;
+  color: #000000;
   font-size: 25px;
   text-align: center;
   line-height: 40px;
