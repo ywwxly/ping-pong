@@ -467,7 +467,7 @@
 </template>
 
 <script>
-var x1, y1, x2, y2, timeout;
+var x1, y1, x2, y2;
 /**
  * 生成并返回一个从m到n全区间的随机数
  * @param {Object} m
@@ -493,23 +493,24 @@ function randomColor() {
  * @param {Boolean} immediate 是否立即执行
  * @return null
  */
-function debounce(func, wait = 250, immediate = false) {
-  // 清除定时器
-  if (timeout !== null) clearTimeout(timeout);
-  // 立即执行，此类情况一般用不到
-  if (immediate) {
-    var callNow = !timeout;
-    timeout = setTimeout(function () {
-      timeout = null;
-    }, wait);
-    if (callNow) typeof func === "function" && func();
-  } else {
-    // 设置定时器，当最后一次操作后，timeout不会再被清除，所以在延时wait毫秒后执行func回调方法
-    timeout = setTimeout(function () {
-      typeof func === "function" && func();
-    }, wait);
-  }
-}
+//var timeout = null;
+// function debounce(func, wait = 250, immediate = false) {
+//   // 清除定时器
+//   if (timeout !== null) clearTimeout(timeout);
+//   // 立即执行，此类情况一般用不到
+//   if (immediate) {
+//     var callNow = !timeout;
+//     timeout = setTimeout(function () {
+//       timeout = null;
+//     }, wait);
+//     if (callNow) typeof func === "function" && func();
+//   } else {
+//     // 设置定时器，当最后一次操作后，timeout不会再被清除，所以在延时wait毫秒后执行func回调方法
+//     timeout = setTimeout(function () {
+//       typeof func === "function" && func();
+//     }, wait);
+//   }
+// }
 export default {
   name: "pingpong",
   data() {
@@ -551,6 +552,7 @@ export default {
       showImageBg: false,
       isStart: false, //是否开始
       ballWrapperShow: false, //抽象场景球体显示/隐藏
+      isClickEnd: false, //当前生成是否已选择过
       //训练模式
       typeList: [
         {
@@ -636,17 +638,20 @@ export default {
     switchChange() {
       this.stopTest();
     },
+    //模式切换响应
     radioChange(e) {
       console.log(e, this.testType, "---radioChange");
-      // this.testType = e;
+      //停止当前模式，并展示结果
       this.stopTest();
     },
+    // 随机生成0/1/""
     randomText() {
       var isN = true;
       clearTimeout(this.timer);
       this.createdText();
       this.timer = setInterval(() => {
         //clearTimeout(timer);
+        this.isClickEnd = true; //未选择的状态值
         if (isN) {
           this.createdText();
         } else {
@@ -659,6 +664,7 @@ export default {
         isN = !isN;
       }, this.textTime);
     },
+    //在球体上创建0/1
     createdText() {
       if (this.testCount >= this.maxTestCount) {
         this.stopTest();
@@ -674,18 +680,20 @@ export default {
         }
       }
     },
+    //改变间隔时间
     changeTextTime(type) {
       type ? (this.textTime += 100) : (this.textTime -= 100);
       // document.getElementById("textTime").innerText = textTime + "ms";
     },
-
+    //改变球体速度
     changeBallSpeed(type) {
       console.log(111, type);
       type ? this.ballSpeed++ : this.ballSpeed--;
       // document.getElementById("ballSpeed").innerText = ballSpeed * 10;
     },
-
+    //选择0/1
     seletedText(event) {
+      this.isClickEnd = false; //选择后的状态值
       console.log(event.target.innerText);
       let showText =
         this.testType == "2d"
@@ -710,6 +718,7 @@ export default {
       this.wrapDiv = document.getElementById("wrap");
       this.createBalls();
     },
+    //初始化
     init() {
       if (!this.isStart) {
         this.tableData = [
@@ -742,6 +751,7 @@ export default {
         this.stopTest();
       }
     },
+    //停止当前模式，并展示结果
     stopTest() {
       console.log("停止");
       if (this.isStart) {
@@ -775,14 +785,17 @@ export default {
         console.log(this.tableData, "this.tableData");
       }
     },
+    //监听按键事件
     addEventListener() {
       document.addEventListener("keydown", this.eventKey, false);
     },
+    //按键响应函数
     eventKey(keyEvent) {
       keyEvent = keyEvent ? keyEvent : window.event;
       var keyCode =
         keyEvent.keyCode || keyEvent.which || keyEvent.charCode || keyEvent;
-      debounce(() => {
+      if (this.isClickEnd) {
+        //未选择时
         console.log(keyCode, "--keyCode");
         switch (keyCode) {
           case 90: //Z
@@ -804,8 +817,9 @@ export default {
           default:
             break;
         }
-      });
+      }
     },
+    //三维训练模式初始化
     create3DBall() {
       // if (!this.context3D) {
       var canvas = document.getElementById("canvas");
@@ -837,6 +851,7 @@ export default {
       }
       this.moveBall();
     },
+    //三维训练模式：绘制球体
     draw3dBall() {
       this.context3D.clearRect(
         -this.wrapHeight / 2,
@@ -884,7 +899,7 @@ export default {
         this.context3D.restore();
       }
     },
-    //生成小球函数
+    //平滑训练模式：生成小球函数
     createBalls() {
       this.wrapDiv.innerHTML = "";
       for (var i = 0; i < 1; i++) {
@@ -916,6 +931,7 @@ export default {
         this.balls.push(ball);
       }
     },
+    //平滑/三维训练模式 动画
     moveBall(ballObj) {
       this.add = () => {
         if (!this.animationStop) {
@@ -929,7 +945,7 @@ export default {
       };
       requestAnimationFrame(this.add);
     },
-    //小球移动函数，判断小球的位置
+    //平滑训练模式小球移动函数，判断小球的位置
     moveBalls(ballObj) {
       // setInterval(function () {
       ballObj.style.top = ballObj.y + "px";
@@ -968,7 +984,7 @@ export default {
       this.crash(ballObj);
       // }, 10);
     },
-    //碰撞函数
+    //平滑训练模式碰撞函数
     crash(ballObj) {
       //通过传过来的小球对象来获取小球的X坐标和Y坐标
       x1 = ballObj.x;

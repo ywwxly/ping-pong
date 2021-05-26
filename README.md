@@ -57,3 +57,7 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 2. 优化UI体验
 
 3. 添加按键防抖功能
+
+4. 去除防抖功能，改为每次生成0/1，只能选择一次
+
+5. 添加部分注释
