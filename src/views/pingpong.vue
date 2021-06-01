@@ -1418,8 +1418,16 @@ export default {
   transform: rotateY(-90deg);
   transform-origin: left;
   transform-style: preserve-3d;
-  background-image: repeating-linear-gradient(45deg, #aaa 0 1px, #aaa0 1px 4px),
-    repeating-linear-gradient(135deg, #aaa 0 1px, #aaa0 1px 4px);
+  background-image: repeating-linear-gradient(
+      45deg,
+      #ababab calc(0px) 1px,
+      hsla(0, 0%, 67%, 0) 1px 4px
+    ),
+    repeating-linear-gradient(
+      135deg,
+      #ababab calc(0px) 1px,
+      hsla(0, 0%, 67%, 0) 1px 4px
+    );
   border: 2px solid #fff;
 }
 .table > .net > .top {

@@ -75,3 +75,5 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 ### 2021.06.01
 
 1. 优化模拟场景效果
+
+2. 解决css样式（`repeating-linear-gradient`）失效的问题
