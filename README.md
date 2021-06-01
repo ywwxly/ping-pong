@@ -71,3 +71,7 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 9. 调整/优化UI
 
 10. 优化导出文件名称
+
+### 2021.06.01
+
+1. 优化模拟场景效果

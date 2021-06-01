@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div style="position: absolute; right: 50px">Version 1.6.0</div>
+    <div style="position: absolute; right: 50px">Version 1.6.1</div>
     <template v-if="showInputUserName">
       <h3 style="margin: 20px 0">视觉追踪训练</h3>
       <div class="input-box">
@@ -178,7 +178,9 @@
                   <div class="right"></div>
                 </div>
                 <div class="ballWrapper" v-show="ballWrapperShow">
-                  <div class="ball"><span class="ball-text">1</span></div>
+                  <div class="ball">
+                    <span class="ball-text">{{ showText }}</span>
+                  </div>
                   <div class="ballShadow"></div>
                 </div>
               </div>
@@ -1322,7 +1324,7 @@ export default {
   justify-content: center;
   align-items: center;
   perspective: 1800px;
-  perspective-origin: calc(16.666% * var(--scales)) calc(50%);
+  perspective-origin: calc(50%) calc(50%);
   overflow: hidden;
   zoom: 1;
   transform: scale(1);
@@ -1331,7 +1333,7 @@ export default {
   position: absolute;
   top: calc(46%);
   transform-style: preserve-3d;
-  transform: rotateY(-97deg) rotateX(-1.5deg) rotateZ(16deg);
+  transform: rotateY(-90deg) rotateX(0deg) rotateZ(16deg);
 }
 .floor {
   position: absolute;
