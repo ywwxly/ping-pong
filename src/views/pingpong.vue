@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div style="position: absolute; right: 50px">Version 1.7.2</div>
+    <div style="position: absolute; right: 50px">Version 1.7.5</div>
     <template v-if="showInputUserName">
       <h3 style="margin: 20px 0">视觉追踪训练</h3>
       <div class="input-box">
@@ -750,7 +750,8 @@ export default {
       reader.readAsDataURL(files);
     },
     //模式切换响应
-    switchChange() {
+    switchChange(e) {
+      this.oldTestType = e.toString();
       this.stopTest();
     },
     //模式切换响应
@@ -922,7 +923,7 @@ export default {
           )
         );
         localStorage.setItem(this.oldTestType, JSON.stringify(tableData));
-        this.oldTestType = this.testType;
+        this.oldTestType = this.testType.toString();
         console.log(this.tableData, this.getNowTime(), "--this.tableData");
         this.testCount = 0;
         if (this.testType == "2d" && this.wrapDiv) this.wrapDiv.innerHTML = "";
