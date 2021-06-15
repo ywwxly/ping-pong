@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div style="position: absolute; right: 50px">Version 1.6.1</div>
+    <div style="position: absolute; right: 50px">Version 1.7.2</div>
     <template v-if="showInputUserName">
       <h3 style="margin: 20px 0">视觉追踪训练</h3>
       <div class="input-box">
