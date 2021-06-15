@@ -353,7 +353,7 @@
               >
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="速度">
+          <el-form-item label="速度" v-if="testType != '3d'">
             <el-input-number
               :min="10"
               :max="120"
@@ -361,9 +361,14 @@
               :step="10"
             ></el-input-number>
           </el-form-item>
-          <el-form-item label="间隔时间（ms）">
+          <el-form-item
+            :label="
+              testType == '3d' ? '高低点检测时间（ms）' : '间隔时间（ms）'
+            "
+          >
             <el-input-number
-              :min="300"
+              :min="testType == '3d' ? 100 : 300"
+              :max="testType == '3d' ? 700 : 10000"
               v-model="textTime"
               :step="100"
             ></el-input-number>
@@ -589,6 +594,8 @@ export default {
       balls: [],
       textArr: ["0", "1"],
       showText: "", //要展示的文本
+      show3dSet: "", //三维位置高低点
+      show3dText: "", //是否展示笑哭脸
       seletedTextShow: false, //选项是否显示
       timer: null,
       setW: window.innerWidth * 0.8,
@@ -612,6 +619,7 @@ export default {
         },
       ], //结果表格
       testType: "2d", //测试类型
+      oldTestType: "2d", //上次选择的模式
       circles: [], //3d球数组
       context3D: null, //3d canvas 对象
       uploadImg: [],
@@ -637,6 +645,9 @@ export default {
       ],
       json_fields: {
         姓名: "name", //常规字段
+        "时间间隔/高低点检测时间(ms)": "textTime", //时间间隔
+        球体速度: "ballSpeed",
+        球体大小: "ballSize",
         本组总数: "allCount", //支持嵌套属性
         正确数量: "correct",
         错误数量: "mistake",
@@ -743,8 +754,8 @@ export default {
       this.stopTest();
     },
     //模式切换响应
-    radioChange(e) {
-      console.log(e, this.testType, "---radioChange");
+    radioChange() {
+      // console.log(e, this.testType, "---radioChange");
       //停止当前模式，并展示结果
       this.stopTest();
     },
@@ -797,26 +808,47 @@ export default {
     },
     //选择0/1
     seletedText(event) {
+      // console.log(event.target.innerText, this.testType, this.show3dSet);
       if (this.isClickEnd) {
         //未选择时
         this.isClickEnd = false; //选择后的状态值
-        console.log(event.target.innerText);
-        let showText =
-          this.testType == "2d"
-            ? this.wrapDiv.childNodes[0].innerText
-            : this.showText;
-        if (showText) {
-          if (event.target.innerText == showText) {
+        if (this.testType == "3d") {
+          let got =
+            (this.show3dSet == "L" && event.target.innerText == 0) ||
+            (this.show3dSet == "H" && event.target.innerText == 1);
+          console.log(this.show3dSet, event.target.innerText, got);
+          if (got) {
+            this.show3dText = "😀";
             console.log("选对了");
             this.tableData[0].correct++;
-            this.randomText();
           } else {
+            this.show3dText = "☹️";
             this.tableData[0].mistake++;
             console.log("选错了");
           }
+          if (!this.show3dSet) {
+            this.show3dText = "☹️";
+            this.tableData[0].nulls++;
+            console.log("选空了");
+          }
         } else {
-          this.tableData[0].nulls++;
-          console.log("选空了");
+          let showText =
+            this.testType == "2d"
+              ? this.wrapDiv.childNodes[0].innerText
+              : this.showText;
+          if (showText) {
+            if (event.target.innerText == showText) {
+              console.log("选对了");
+              this.tableData[0].correct++;
+              this.randomText();
+            } else {
+              this.tableData[0].mistake++;
+              console.log("选错了");
+            }
+          } else {
+            this.tableData[0].nulls++;
+            console.log("选空了");
+          }
         }
       }
     },
@@ -841,7 +873,8 @@ export default {
         if (this.testType == "2d") {
           this.init2D();
         } else if (this.testType == "3d") {
-          console.log(111);
+          //三维模式速度固定
+          this.ballSpeed = 30;
           this.create3DBall();
         } else {
           this.ballWrapperShow = true;
@@ -851,7 +884,9 @@ export default {
           //将所有的小球传到函数中,来实现对小球的移动
           this.moveBall(this.balls[i]);
         }
-        this.randomText();
+        if (this.testType != "3d") {
+          this.randomText();
+        }
         this.addEventListener();
         this.isStart = true;
       } else {
@@ -871,19 +906,23 @@ export default {
         this.balls = [];
         this.tableData[0].allCount = this.testCount.toString();
         this.tableData[0].testCount = 0;
-        let tableData = localStorage.getItem(this.testType)
-          ? JSON.parse(localStorage.getItem(this.testType))
+        let tableData = localStorage.getItem(this.oldTestType)
+          ? JSON.parse(localStorage.getItem(this.oldTestType))
           : [];
         tableData.push(
           Object.assign(
             {
+              ballSize: this.ballSize,
+              ballSpeed: this.ballSpeed,
+              textTime: this.textTime,
               time: this.getNowTime(),
               name: this.userName,
             },
             this.tableData[0]
           )
         );
-        localStorage.setItem(this.testType, JSON.stringify(tableData));
+        localStorage.setItem(this.oldTestType, JSON.stringify(tableData));
+        this.oldTestType = this.testType;
         console.log(this.tableData, this.getNowTime(), "--this.tableData");
         this.testCount = 0;
         if (this.testType == "2d" && this.wrapDiv) this.wrapDiv.innerHTML = "";
@@ -988,13 +1027,44 @@ export default {
           circle.yspeed *= -1;
         }
         circle.z += circle.zspeed;
-        if (circle.z > 1200 || circle.z < -50) {
+        let oldShow3dSet = this.show3dSet;
+        if (circle.z < this.textTime - 50 || circle.z > 1500 - this.textTime) {
+          if (circle.z > 1500 - this.textTime) {
+            //console.log(new Date().getTime());
+            // console.log(circle.z, (100 + this.textTime / 10));
+            //console.log("最低点");
+            this.show3dSet = "L";
+          }
+          if (circle.z < this.textTime - 50) {
+            // console.log(circle.z);
+            //console.log("最高点");
+            this.show3dSet = "H";
+          }
+        } else {
+          this.show3dSet = "";
+          // clearTimeout(this.timer);
+          //  this.show3dText = "";
+        }
+
+        if (!this.show3dSet && oldShow3dSet) {
+          // console.log(this.show3dSet, oldShow3dSet, "-----oldShow3dSet");
+          if (this.testCount >= this.maxTestCount) {
+            this.stopTest();
+          } else {
+            this.isClickEnd = true;
+            this.testCount++;
+            this.tableData[0].testCount = this.testCount.toString();
+          }
+        }
+
+        if (circle.z > 1500 || circle.z < -50) {
           circle.zspeed *= -1;
         }
         var scale = this.context3D.fouse / (this.context3D.fouse + circle.z);
         this.context3D.save();
         this.context3D.scale(scale, scale);
         this.context3D.beginPath();
+
         var radiusBg = this.context3D.createRadialGradient(
           circle.x,
           circle.y,
@@ -1006,14 +1076,13 @@ export default {
         radiusBg.addColorStop(0, "#fbf5dd");
         radiusBg.addColorStop(1, "#e4c03b");
         this.context3D.fillStyle = radiusBg;
-
         this.context3D.arc(circle.x, circle.y, this.ballSize, 0, Math.PI * 2);
         this.context3D.fill();
         // 设置颜色
         this.context3D.fillStyle = "#000";
-        this.context3D.font = "18px bold 黑体";
+        this.context3D.font = this.ballSize * 2 + "px" + " bold 黑体";
         this.context3D.textAlign = "center";
-        this.context3D.fillText(this.showText || "", circle.x, circle.y + 15);
+        this.context3D.fillText(this.show3dText, circle.x, circle.y + 30);
         this.context3D.restore();
       }
     },
@@ -1051,14 +1120,24 @@ export default {
     },
     //平滑/三维训练模式 动画
     moveBall(ballObj) {
+      //requestAnimationFrame效果
+      // let diffTime = 16.7;
+      // let nowTime = Date.now();
+      // let lastTime = Date.now();
       this.add = () => {
         if (!this.animationStop) {
           requestAnimationFrame(this.add); // 下一帧渲染之前继续执行 this.add 方法
+          //记录当前时间
+          // nowTime = Date.now();
+          // // 当前时间-上次执行时间如果大于diffTime，那么执行动画，并更新上次执行时间
+          // if (nowTime - lastTime > diffTime) {
+          //   lastTime = nowTime;
           if (this.testType == "2d") {
             this.moveBalls(ballObj);
           } else {
             this.draw3dBall();
           }
+          // }
         }
       };
       requestAnimationFrame(this.add);

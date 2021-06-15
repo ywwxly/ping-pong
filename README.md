@@ -77,3 +77,11 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 1. 优化模拟场景效果
 
 2. 解决css样式（`repeating-linear-gradient`）失效的问题
+
+### 2021.06.15
+
+1. 三维训练模式逻辑更改为最高点最低点判定（速度固定30）
+
+2. 丰富导出数据表格
+
+3. 修复切换模式导出数据模式未对应的bug
