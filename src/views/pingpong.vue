@@ -750,13 +750,10 @@ export default {
       reader.readAsDataURL(files);
     },
     //模式切换响应
-    switchChange(e) {
-      this.oldTestType = e.toString();
-      this.stopTest();
-    },
-    //模式切换响应
-    radioChange() {
+    radioChange(e) {
       // console.log(e, this.testType, "---radioChange");
+      console.log(e, "---radioChange");
+      this.oldTestType = e.toString();
       //停止当前模式，并展示结果
       this.stopTest();
     },
