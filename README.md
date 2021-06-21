@@ -85,3 +85,7 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 2. 丰富导出数据表格
 
 3. 修复切换模式导出数据模式未对应的bug
+
+### 2021.06.2021
+
+1. 增加每次反应时间数据记录

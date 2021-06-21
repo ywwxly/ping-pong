@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div style="position: absolute; right: 50px">Version 1.7.6</div>
+    <div style="position: absolute; right: 50px">Version 1.7.7</div>
     <template v-if="showInputUserName">
       <h3 style="margin: 20px 0">视觉追踪训练</h3>
       <div class="input-box">
@@ -616,6 +616,7 @@ export default {
           correct: 0, //正确数量
           mistake: 0, //错误数量
           nulls: 0, //选空数量
+          responseTime: [], //反应时间
         },
       ], //结果表格
       testType: "2d", //测试类型
@@ -628,6 +629,7 @@ export default {
       isStart: false, //是否开始
       ballWrapperShow: false, //抽象场景球体显示/隐藏
       isClickEnd: false, //当前生成是否已选择过
+      startTime: 0, //每次开始时间
       //训练模式
       typeList: [
         {
@@ -649,6 +651,8 @@ export default {
         球体速度: "ballSpeed",
         球体大小: "ballSize",
         本组总数: "allCount", //支持嵌套属性
+        选择数量: "seletedCount",
+        "每次反应时间(ms)": "responseTime", //反应时间
         正确数量: "correct",
         错误数量: "mistake",
         选空数量: "nulls",
@@ -791,6 +795,7 @@ export default {
         } else {
           this.showText = this.textArr[r];
         }
+        this.startTime = Date.now();
       }
     },
     //改变间隔时间
@@ -808,6 +813,8 @@ export default {
     seletedText(event) {
       // console.log(event.target.innerText, this.testType, this.show3dSet);
       if (this.isClickEnd) {
+        let nowTime = Date.now();
+        this.tableData[0].responseTime.push(nowTime - this.startTime);
         //未选择时
         this.isClickEnd = false; //选择后的状态值
         if (this.testType == "3d") {
@@ -865,6 +872,7 @@ export default {
             correct: 0,
             mistake: 0,
             nulls: 0,
+            responseTime: [],
           },
         ];
         this.animationStop = false;
@@ -915,6 +923,10 @@ export default {
               textTime: this.textTime,
               time: this.getNowTime(),
               name: this.userName,
+              seletedCount:
+                this.tableData[0].nulls +
+                this.tableData[0].mistake +
+                this.tableData[0].correct,
             },
             this.tableData[0]
           )
@@ -1052,6 +1064,7 @@ export default {
             this.isClickEnd = true;
             this.testCount++;
             this.tableData[0].testCount = this.testCount.toString();
+            this.startTime = Date.now();
           }
         }
 
