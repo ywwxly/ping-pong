@@ -86,6 +86,10 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 
 3. 修复切换模式导出数据模式未对应的bug
 
-### 2021.06.2021
+### 2021.06.20
 
 1. 增加每次反应时间数据记录
+
+### 2021.06.28
+
+1. 修改UI文案

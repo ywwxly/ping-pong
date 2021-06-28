@@ -1,8 +1,8 @@
 <template>
   <div>
-    <div style="position: absolute; right: 50px">Version 1.7.7</div>
+    <div style="position: absolute; right: 50px">Version 1.7.8</div>
     <template v-if="showInputUserName">
-      <h3 style="margin: 20px 0">视觉追踪训练</h3>
+      <h3 style="margin: 20px 0">运动视觉训练系统</h3>
       <div class="input-box">
         <div class="input-div">
           <el-form label-position="right" label-width="80px">
@@ -39,7 +39,7 @@
     >
     <template v-else>
       <div style="position: absolute; left: 50px">姓名：{{ userName }}</div>
-      <h3 style="margin: 20px 0">{{ getModeString }}视觉追踪训练</h3>
+      <h3 style="margin: 20px 0">{{ getModeString }}训练模式</h3>
       <div class="flex" style="justify-content: center">
         <div style="position: relative">
           <!-- 右侧按钮 -->
@@ -140,7 +140,7 @@
               </div>
             </el-tooltip>
           </div>
-          <!-- 平滑运动 -->
+          <!-- 二维运动 -->
           <div
             id="wrap"
             :style="{
@@ -151,7 +151,7 @@
             :class="showImageBg && 'wrap-bg'"
             v-if="testType == '2d'"
           ></div>
-          <!-- 抽象场景 -->
+          <!-- 3D场景 -->
           <template v-else-if="testType == 'simulation'">
             <div
               class="box"
@@ -186,7 +186,7 @@
               </div>
             </div>
           </template>
-          <!-- 三维运动 -->
+          <!-- 深度运动 -->
           <div v-else-if="testType == '3d'">
             <div
               style="
@@ -419,18 +419,18 @@
             </download-excel>
           </el-form-item> -->
           <!-- <el-form-item
-          :label="(showImageBg ? '关闭' : '加载') + '抽象模拟'"
+          :label="(showImageBg ? '关闭' : '加载') + '3D模拟'"
           v-if="testType == '2d'"
         >
           <el-button
             size="small"
             type="primary"
             @click="showImageBg = !showImageBg"
-            >{{ showImageBg ? "关闭" : "加载" }}抽象模拟</el-button
+            >{{ showImageBg ? "关闭" : "加载" }}3D模拟</el-button
           >
         </el-form-item>
         <el-form-item
-          label="更换抽象模拟场景"
+          label="更换3D模拟场景"
           v-if="testType == '2d' && showImageBg"
         >
           <el-upload class="upload-demo" action="#" :on-change="uploadOnChange">
@@ -474,24 +474,22 @@
           <h3 style="text-align: left">（ 1 ）产品介绍</h3>
           <p>
             运用视觉运动追踪的理论和原则结合计算机技术，初步设计开发“视觉运动
-            追踪训练系统”。该训练系统包括 3
-            个模块：平滑运动视觉追踪训练、三维运动
-            视觉追踪训练和抽象模拟场景视觉追踪训练。平滑运动视觉追踪训练系统不但可
+            追踪训练系统”。该训练系统包括 3 个模块：二维运动视觉训练、深度
+            视觉训练和3D模拟运动视觉训练。二维运动视觉训练模式不但可
             以对个体的视觉运动追踪能力进行任意时长的训练，同时为了防止训练者在训练
             过程中出现注意力不集中，系统专门设计了防止训练者分心的按键装置，同时该
             系统还可随时设置物体运动的速度和运动物体的大小，以满足不同训练者的训练
-            需求；三维运动视觉追踪训练系统运用 3D
-            效果制作三维球体由远及近以及由近及
+            需求；深度训练系统运用3D效果制作3D球体由远及近以及由近及
             远的两段飞行视频，飞行速度可自行调节，使用者可以根据不同训练
-            者的需要进行选择，用以训练个体的时空视知觉；抽象模拟场景视觉追踪训练模
-            块在抽象模拟乒乓球运动场景的基础上，根据乒乓球比赛真实视频中乒乓球的飞行线路、
-            落点进行抽象模拟，用于乒乓球运动的专项视觉运动追踪训练。根据练习者的不同
-            训练要求可随时更改球的速度、落点、球体的大小以及训练时长，同时训练系统
-            仍然提供了防止练习者分心的按键设置，并给予量化评价。
+            者的需要进行选择，用以训练个体的时空视感知；3D模拟运动视觉训练模
+            块在3D模拟乒乓球运动场景的基础上，根据乒乓球比赛真实视频中乒乓球的飞行线路、
+            落点进行3D模拟，用于乒乓球运动的专项视觉运动追踪训练。根据练习者的不同
+            训练要求可随时更改球的速度、落点、球体的大小以及当前训练组次数，同时训练系统
+            仍然提供了防止练习者分心的设置，数据导出，便于量化评价。
           </p>
-          <h3 style="text-align: left">（ 2 ）平滑运动视觉追踪训练使用说明</h3>
+          <h3 style="text-align: left">（ 2 ）二维运动视觉训练使用说明</h3>
           <p>
-            打开“平滑运动视觉追踪训练”，使用者可根据需要按加速或减速键控制球
+            打开“二维运动视觉训练”，使用者可根据需要按加速或减速键控制球
             的飞行速度，还可以根绝需要选择球的大小，同时系统提供了防止训练者分心的
             65 按键装置。分心按键设置如下：在飞行的球体上会随机呈现数字“ 0 ”或“
             1 ”， 默认呈现时间为 500ms（可自行调节）
@@ -501,18 +499,16 @@
             使用者可根据不同训练者的需要选用不同参数的视觉运动追踪训练。系统会自动记录训练者按键正确的次数和数字呈现的总次数，并显示在界面
             下方中央。
           </p>
-          <h3 style="text-align: left">（ 3 ）三维运动视觉追踪训练使用说明</h3>
+          <h3 style="text-align: left">（ 3 ）深度视觉训练使用说明</h3>
           <p>
-            打开“三维运动视觉追踪训练”，其中飞行速度默认为 30m/s
+            打开“深度视觉训练”，其中飞行速度默认为 30m/s
             ，球体大小，“0”或“1”变化时间间隔，窗口大小等可调，
-            使用者可根据不同训练者的需要选用不同参数的视觉运动追踪训练。
+            使用者可根据不同训练者的需要选用不同参数的视觉运动追踪训练。系统会自动记录训练者按键正确的次数和数字呈现的总次数，并显示在界面
+            下方中央。
           </p>
-          <h3 style="text-align: left">
-            （ 4 ）抽象模拟场景视觉追踪训练使用说明
-          </h3>
+          <h3 style="text-align: left">（ 4 ）3D模拟运动视觉训练使用说明</h3>
           <p>
-            切换“平滑运动视觉追踪训练”，点击设置按钮，加载模拟场景（可自行更换场景图片），界面默认会呈现一个抽象的模拟乒乓球场和
-            位于对方底线中央的视觉追踪目标乒乓球，按下“开始”键，乒乓球将以“ 20
+            切换“二维运动视觉训练”，点击设置按钮，点击“开始”按钮，乒乓球将以“ 20
             ”的初
             始速度进行模拟比赛飞行，训练者以运动员的视角进行视觉运动追踪训练。界面
             底部提供可以随时调节球飞行速度、大小、落点的按键，同时系统还提供了防止
@@ -526,10 +522,10 @@
           </p>
           <h3>（5）操作说明</h3>
           <p>
-            点击开始后,随机出现数字,0 ：请按 下“ Z或方向左 ”键 ; “ 1 ”：请按下“
+            点击开始后,随机出现数字,0 ：请按下“ Z或方向左 ”键 ; “ 1 ”：请按下“
             M或方向右
             ”键。设置：球体运动速度，数字变化时间间隔，每组测试总数，测试窗口大小等可自行调节。
-            点击“关闭”自动保存本组数据。
+            点击“关闭”自动保存本组数据,导出数据到本地等功能。
           </p>
         </div>
 
@@ -594,7 +590,7 @@ export default {
       balls: [],
       textArr: ["0", "1"],
       showText: "", //要展示的文本
-      show3dSet: "", //三维位置高低点
+      show3dSet: "", //深度位置高低点
       show3dText: "", //是否展示笑哭脸
       seletedTextShow: false, //选项是否显示
       timer: null,
@@ -627,21 +623,21 @@ export default {
       bg2D: "", //模拟场景背景
       showImageBg: false,
       isStart: false, //是否开始
-      ballWrapperShow: false, //抽象场景球体显示/隐藏
+      ballWrapperShow: false, //3D场景球体显示/隐藏
       isClickEnd: false, //当前生成是否已选择过
       startTime: 0, //每次开始时间
       //训练模式
       typeList: [
         {
-          name: "平滑运动",
+          name: "二维运动视觉",
           value: "2d",
         },
         {
-          name: "三维运动",
+          name: "深度视觉",
           value: "3d",
         },
         {
-          name: "抽象模拟",
+          name: "3D模拟运动视觉",
           value: "simulation",
         },
       ],
@@ -696,10 +692,10 @@ export default {
   computed: {
     getModeString() {
       return this.testType == "2d"
-        ? "平滑运动"
+        ? "二维运动视觉"
         : this.testType == "simulation"
-        ? "抽象模拟"
-        : "三维运动";
+        ? "3D模拟运动视觉"
+        : "深度视觉";
     },
   },
   mounted() {
@@ -879,7 +875,7 @@ export default {
         if (this.testType == "2d") {
           this.init2D();
         } else if (this.testType == "3d") {
-          //三维模式速度固定
+          //深度模式速度固定
           this.ballSpeed = 30;
           this.create3DBall();
         } else {
@@ -986,7 +982,7 @@ export default {
           break;
       }
     },
-    //三维训练模式初始化
+    //深度训练模式初始化
     create3DBall() {
       // if (!this.context3D) {
       var canvas = document.getElementById("canvas");
@@ -1018,7 +1014,7 @@ export default {
       }
       this.moveBall();
     },
-    //三维训练模式：绘制球体
+    //深度训练模式：绘制球体
     draw3dBall() {
       this.context3D.clearRect(
         -this.wrapHeight / 2,
@@ -1097,7 +1093,7 @@ export default {
         this.context3D.restore();
       }
     },
-    //平滑训练模式：生成小球函数
+    //二维训练模式：生成小球函数
     createBalls() {
       this.wrapDiv.innerHTML = "";
       for (var i = 0; i < 1; i++) {
@@ -1129,7 +1125,7 @@ export default {
         this.balls.push(ball);
       }
     },
-    //平滑/三维训练模式 动画
+    //二维/深度训练模式 动画
     moveBall(ballObj) {
       //requestAnimationFrame效果
       // let diffTime = 16.7;
@@ -1153,7 +1149,7 @@ export default {
       };
       requestAnimationFrame(this.add);
     },
-    //平滑训练模式小球移动函数，判断小球的位置
+    //二维训练模式小球移动函数，判断小球的位置
     moveBalls(ballObj) {
       // setInterval(function () {
       ballObj.style.top = ballObj.y + "px";
@@ -1192,7 +1188,7 @@ export default {
       this.crash(ballObj);
       // }, 10);
     },
-    //平滑训练模式碰撞函数
+    //二维训练模式碰撞函数
     crash(ballObj) {
       //通过传过来的小球对象来获取小球的X坐标和Y坐标
       x1 = ballObj.x;
@@ -1402,7 +1398,7 @@ export default {
 .item {
   margin-top: 20px;
 }
-/* 抽象 */
+/* 3D */
 .box {
   font-family: "Montserrat", sans-serif;
   background-color: #111;
